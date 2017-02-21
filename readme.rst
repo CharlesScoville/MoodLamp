@@ -24,17 +24,17 @@ The human interaction could be buttons, or something like an ESP8266 or similar 
 
 Function and Features
 ---------------------
-This project is currently for the PIC18F27K40 and PIC18F13K50 microcontrolers. It should be trivial to port to any other Microchip part. Porting to a different language would be a bit more difficult, though a less developed PIC CX8 branch does exist (just not publicly).
+This project is currently for the PIC18F27K40 and PIC18F13K50 microcontrolers, however it should be trivial to port to any other Microchip part. Porting to a different language would be a bit more difficult. A less developed PIC CX8 branch does exist, but is not public at this time.
 
-By using optimized PIC18 ASM, the code is fast and small. Total code size at the time of writing this is less than 700 bytes, speed is about 20us per interpolation iteration for the PIC18F13K50 @ 32Mhz. Very efficient.
+By using optimized PIC18 ASM, the code is fast and small. Total code size at the time of writing this is less than 700 bytes. Speed is about 20us per interpolation iteration for the PIC18F13K50 @ 32Mhz. It's very efficient.
 
-The implementation is intended to be able to control four sets of RGB LEDs, or 12 independent PWM channels total. That is, you can have four different colors actively lighting the diffuser at a time. With light piping or fiber-optics, one can use this feature to selective light specific areas of your diffuser.
+The implementation is intended to allow independent control of four sets of RGB LEDs, or 12 independent PWM channels total. Said differently, you can have four different colors actively lighting the diffuser at a time. With light piping or fiber-optics, one can use this feature to selective light specific areas of your diffuser. Very interesting effects can be had with this.
 
-So far this code uses spline interpolation to fade between the seed color values. Unlike linear interpolation, spline interpolation avoids abrupt transitions, especially when directly on seed values. This generally provides a more smooth experience. The implementation uses Cubic Hermite spline interpolation with optimizations for unit interval. This is plenty fast, making a linear interpolation option unnecessary.
+So far this code uses spline interpolation to fade between the seed color values. Unlike linear interpolation, spline interpolation skillfully avoids abrupt transitions, especially when directly on seed values. This generally provides a more smooth experience. The implementation uses Cubic Hermite spline interpolation with optimizations for unit interval. This is plenty fast, making a linear interpolation option unnecessary.
 
-Seed color values are generated using a 48 bit Galois LFSR (Linear Feedback Shift Register). This PRNG has very high entropy, is very white, and is plenty fast and small. Estimated time before the sequence will repeat is 178 years @ 50K iterations a second. Some initial seeds are given at the top of the source file.
+Seed color values are generated using a 48 bit Galois LFSR (Linear Feedback Shift Register). This PRNG has very high entropy, is very white, and is plenty fast and small. Estimated time before the sequence will repeat is 178 years @ 50K iterations a second. Some initial seeds are given at the top of the source file. (Note: It’s not cryptographically secure)
 
-Much of the operations are done layer at a time in large batches, that is, “pipe-lined.” This allows the overhead of context switching to be hidden, at the expense of needing large buffers to hold intermediate work. 
+Much of the operations are done layer at a time in large batches, that is, data processing is “pipe-lined.” This allows the overhead of context switching to be hidden, at the expense of needing large buffers to hold intermediate work.
 
 The lowest layer of the system, the PWM layer, has an inherent wait-time component. The system only really needs to deal with PWM code for the short time the pins need their state changed. The implementation is designed from the ground up to take advantage of this idle time to do other things.  This GREATLY improves total throughput and performance.
 
@@ -54,9 +54,6 @@ This project is just getting underway, so there is much to be done. This is by n
 - Although the intended design is to allow four independent color channels, code currently does not do this. It currently generates color for one channel, and copies it to the other three. This is a difficult problem to do, as success is VERY performance dependent.
 
 - Source currently needs several tweaks when changing target devices. It is desirable for this to be done with a simple switch at the top of the source file.
-
-
-
 
 
 
