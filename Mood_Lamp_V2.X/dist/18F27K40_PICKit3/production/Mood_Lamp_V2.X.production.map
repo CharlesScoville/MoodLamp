@@ -1,0 +1,318 @@
+MPLINK 5.08, LINKER
+Linker Map File - Created Tue Feb 21 11:30:46 2017
+
+                                 Section Info
+                  Section       Type    Address   Location Size(Bytes)
+                ---------  ---------  ---------  ---------  ---------
+                   .org_1       code   0x000000    program   0x000004
+                   .cinit    romdata   0x000004    program   0x000002
+                   .org_2       code   0x000008    program   0x000004
+                   .org_3       code   0x000018    program   0x000490
+                   .org_4       code   0x000800    program   0x0000e0
+.config_300000_BUILD/18F27K40_PICKIT3/PRODUCTIO    romdata   0x300000    program   0x000001
+.config_300001_BUILD/18F27K40_PICKIT3/PRODUCTIO    romdata   0x300001    program   0x000001
+.config_300002_BUILD/18F27K40_PICKIT3/PRODUCTIO    romdata   0x300002    program   0x000001
+.config_300003_BUILD/18F27K40_PICKIT3/PRODUCTIO    romdata   0x300003    program   0x000001
+.config_300004_BUILD/18F27K40_PICKIT3/PRODUCTIO    romdata   0x300004    program   0x000001
+.config_300005_BUILD/18F27K40_PICKIT3/PRODUCTIO    romdata   0x300005    program   0x000001
+.config_300006_BUILD/18F27K40_PICKIT3/PRODUCTIO    romdata   0x300006    program   0x000001
+.config_300007_BUILD/18F27K40_PICKIT3/PRODUCTIO    romdata   0x300007    program   0x000001
+.config_300008_BUILD/18F27K40_PICKIT3/PRODUCTIO    romdata   0x300008    program   0x000001
+.config_30000A_BUILD/18F27K40_PICKIT3/PRODUCTIO    romdata   0x30000a    program   0x000001
+.config_30000B_BUILD/18F27K40_PICKIT3/PRODUCTIO    romdata   0x30000b    program   0x000001
+                   .org_0       code   0x310000    program   0x000006
+                  GPR_VAR      udata   0x000060       data   0x00009b
+
+
+
+                              Program Memory Usage 
+                               Start         End      
+                           ---------   ---------      
+                            0x000000    0x000005      
+                            0x000008    0x00000b      
+                            0x000018    0x0004a7      
+                            0x000800    0x0008df      
+                            0x300000    0x300008      
+                            0x30000a    0x30000b      
+                            0x310000    0x310005      
+            1419 out of 132126 program addresses used, program memory utilization is 1%
+
+
+
+                              Symbols - Sorted by Name
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+               CANT_WRITE   0x0003a6    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+           CANT_WRITE_PWM   0x0003c2    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+            CUBIC_HERMITE   0x000272    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                   DATAEE   0x310000    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  EE_READ   0x000454    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  END_INT   0x00003a    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+              FILL_BUFFER   0x000260    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+            FINISH_READ_B   0x00044e    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+            FINISH_READ_G   0x00042a    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+          FINISH_READ_PWM   0x0003e2    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+            FINISH_READ_R   0x000406    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                 GEN_LOOP   0x000264    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+               GEN_RANDOM   0x000470    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                 GET_COEF   0x00033c    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                     ISRH   0x000008    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                     ISRL   0x000018    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                 ITTERATE   0x000294    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  LOW_ISR   0x00001c    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                     MAIN   0x0000c0    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+            READ_BUFFER_B   0x000430    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+            READ_BUFFER_G   0x00040c    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+          READ_BUFFER_PWM   0x0003c4    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+            READ_BUFFER_R   0x0003e8    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             READ_B_ERROR   0x000452    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             READ_G_ERROR   0x00042e    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+           READ_PWM_ERROR   0x0003e6    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             READ_R_ERROR   0x00040a    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                 RES_VECT   0x000000    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                    START   0x000046    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                TIME_DOWN   0x0001d2    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  TIME_UP   0x00024a    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             WRITE_BUFFER   0x00028c    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+         WRITE_PWM_BUFFER   0x0003a8    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+        WRITE_RING_BUFFER   0x00038c    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             _.org_3_004E   0x00004e    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             _.org_3_0052   0x000052    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             _.org_3_0058   0x000058    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             _.org_3_02AA   0x0002aa    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             _.org_3_02C4   0x0002c4    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             _.org_3_02DE   0x0002de    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             _.org_3_02F8   0x0002f8    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             _.org_3_0314   0x000314    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             _.org_3_0328   0x000328    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             _.org_3_033E   0x00033e    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             _.org_3_03C6   0x0003c6    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             _.org_3_03EA   0x0003ea    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             _.org_3_040E   0x00040e    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             _.org_3_0432   0x000432    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             _.org_3_046C   0x00046c    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             _.org_3_049C   0x00049c    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+              _16X4_TABLE   0x0004a8    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+              _48BIT_LFSR   0x00048e    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+         _8X4_16BIT_TABLE   0x000880    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+          _8X4_8BIT_TABLE   0x0008c0    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  _FILL_B   0x000148    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  _FILL_G   0x000104    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                _FILL_PWM   0x0001b0    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             _LOAD_TIMERS   0x00018c    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+               _TABLE_END   0x0008e0    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  B1_TIME   0x000066       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  B2_TIME   0x000069       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  B3_TIME   0x00006c       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  B4_TIME   0x00006f       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                 BSR_TEMP   0x000062       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             B_COEF_POINT   0x0000e7       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  B_COUNT   0x0000e8       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+               B_IN_POINT   0x0000e9       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+              B_OUT_POINT   0x0000ea       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                     B_P0   0x00009b       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                     B_P1   0x00009c       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                     B_P2   0x00009d       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                     B_P3   0x00009e       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+               B_RINGBUFF   0x0000eb       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                       C0   0x000087       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                    C0XP0   0x00007b       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                       C1   0x000089       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                    C1XP1   0x00007e       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                       C2   0x00008b       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                    C2XP2   0x000081       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                       C3   0x00008d       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                    C3XP3   0x000084       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+               DUMMY_TIME   0x000070       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+               EE_ADDRESS   0x000079       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                EE_LENGTH   0x00007a       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                    FLAGS   0x000063       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  G1_TIME   0x000065       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  G2_TIME   0x000068       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  G3_TIME   0x00006b       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  G4_TIME   0x00006e       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             G_COEF_POINT   0x0000d3       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  G_COUNT   0x0000d4       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+               G_IN_POINT   0x0000d5       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+              G_OUT_POINT   0x0000d6       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                     G_P0   0x000097       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                     G_P1   0x000098       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                     G_P2   0x000099       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                     G_P3   0x00009a       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+               G_RINGBUFF   0x0000d7       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  LFSR_01   0x000073       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  LFSR_02   0x000074       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  LFSR_03   0x000075       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  LFSR_04   0x000076       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  LFSR_05   0x000077       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                       P0   0x00008f       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                       P1   0x000090       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                       P2   0x000091       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                       P3   0x000092       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                PWM_COUNT   0x0000a4       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             PWM_IN_POINT   0x0000a5       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+            PWM_OUT_POINT   0x0000a6       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                 PWM_PINS   0x000071       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             PWM_RINGBUFF   0x0000a7       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  R1_TIME   0x000064       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  R2_TIME   0x000067       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  R3_TIME   0x00006a       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  R4_TIME   0x00006d       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                     RAND   0x000078       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             R_COEF_POINT   0x0000bf       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  R_COUNT   0x0000c0       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+               R_IN_POINT   0x0000c1       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+              R_OUT_POINT   0x0000c2       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                     R_P0   0x000093       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                     R_P1   0x000094       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                     R_P2   0x000095       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                     R_P3   0x000096       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+               R_RINGBUFF   0x0000c3       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+              STATUS_TEMP   0x000061       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                   W_TEMP   0x000060       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                    _CHAR   0x00009f       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+              _COEF_POINT   0x0000a0       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                   _COUNT   0x0000a1       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+               _OUT_POINT   0x0000a2       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+              _RINGBUFF_P   0x0000a3       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+
+
+
+                              Symbols - Sorted by Address
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+                 RES_VECT   0x000000    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                     ISRH   0x000008    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                     ISRL   0x000018    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  LOW_ISR   0x00001c    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  END_INT   0x00003a    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                    START   0x000046    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             _.org_3_004E   0x00004e    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             _.org_3_0052   0x000052    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             _.org_3_0058   0x000058    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                     MAIN   0x0000c0    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  _FILL_G   0x000104    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  _FILL_B   0x000148    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             _LOAD_TIMERS   0x00018c    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                _FILL_PWM   0x0001b0    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                TIME_DOWN   0x0001d2    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  TIME_UP   0x00024a    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+              FILL_BUFFER   0x000260    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                 GEN_LOOP   0x000264    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+            CUBIC_HERMITE   0x000272    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             WRITE_BUFFER   0x00028c    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                 ITTERATE   0x000294    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             _.org_3_02AA   0x0002aa    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             _.org_3_02C4   0x0002c4    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             _.org_3_02DE   0x0002de    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             _.org_3_02F8   0x0002f8    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             _.org_3_0314   0x000314    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             _.org_3_0328   0x000328    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                 GET_COEF   0x00033c    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             _.org_3_033E   0x00033e    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+        WRITE_RING_BUFFER   0x00038c    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+               CANT_WRITE   0x0003a6    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+         WRITE_PWM_BUFFER   0x0003a8    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+           CANT_WRITE_PWM   0x0003c2    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+          READ_BUFFER_PWM   0x0003c4    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             _.org_3_03C6   0x0003c6    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+          FINISH_READ_PWM   0x0003e2    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+           READ_PWM_ERROR   0x0003e6    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+            READ_BUFFER_R   0x0003e8    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             _.org_3_03EA   0x0003ea    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+            FINISH_READ_R   0x000406    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             READ_R_ERROR   0x00040a    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+            READ_BUFFER_G   0x00040c    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             _.org_3_040E   0x00040e    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+            FINISH_READ_G   0x00042a    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             READ_G_ERROR   0x00042e    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+            READ_BUFFER_B   0x000430    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             _.org_3_0432   0x000432    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+            FINISH_READ_B   0x00044e    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             READ_B_ERROR   0x000452    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  EE_READ   0x000454    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             _.org_3_046C   0x00046c    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+               GEN_RANDOM   0x000470    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+              _48BIT_LFSR   0x00048e    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             _.org_3_049C   0x00049c    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+              _16X4_TABLE   0x0004a8    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+         _8X4_16BIT_TABLE   0x000880    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+          _8X4_8BIT_TABLE   0x0008c0    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+               _TABLE_END   0x0008e0    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                   DATAEE   0x310000    program     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                   W_TEMP   0x000060       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+              STATUS_TEMP   0x000061       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                 BSR_TEMP   0x000062       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                    FLAGS   0x000063       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  R1_TIME   0x000064       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  G1_TIME   0x000065       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  B1_TIME   0x000066       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  R2_TIME   0x000067       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  G2_TIME   0x000068       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  B2_TIME   0x000069       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  R3_TIME   0x00006a       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  G3_TIME   0x00006b       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  B3_TIME   0x00006c       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  R4_TIME   0x00006d       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  G4_TIME   0x00006e       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  B4_TIME   0x00006f       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+               DUMMY_TIME   0x000070       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                 PWM_PINS   0x000071       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  LFSR_01   0x000073       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  LFSR_02   0x000074       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  LFSR_03   0x000075       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  LFSR_04   0x000076       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  LFSR_05   0x000077       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                     RAND   0x000078       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+               EE_ADDRESS   0x000079       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                EE_LENGTH   0x00007a       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                    C0XP0   0x00007b       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                    C1XP1   0x00007e       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                    C2XP2   0x000081       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                    C3XP3   0x000084       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                       C0   0x000087       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                       C1   0x000089       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                       C2   0x00008b       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                       C3   0x00008d       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                       P0   0x00008f       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                       P1   0x000090       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                       P2   0x000091       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                       P3   0x000092       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                     R_P0   0x000093       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                     R_P1   0x000094       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                     R_P2   0x000095       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                     R_P3   0x000096       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                     G_P0   0x000097       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                     G_P1   0x000098       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                     G_P2   0x000099       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                     G_P3   0x00009a       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                     B_P0   0x00009b       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                     B_P1   0x00009c       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                     B_P2   0x00009d       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                     B_P3   0x00009e       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                    _CHAR   0x00009f       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+              _COEF_POINT   0x0000a0       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                   _COUNT   0x0000a1       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+               _OUT_POINT   0x0000a2       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+              _RINGBUFF_P   0x0000a3       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                PWM_COUNT   0x0000a4       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             PWM_IN_POINT   0x0000a5       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+            PWM_OUT_POINT   0x0000a6       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             PWM_RINGBUFF   0x0000a7       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             R_COEF_POINT   0x0000bf       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  R_COUNT   0x0000c0       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+               R_IN_POINT   0x0000c1       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+              R_OUT_POINT   0x0000c2       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+               R_RINGBUFF   0x0000c3       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             G_COEF_POINT   0x0000d3       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  G_COUNT   0x0000d4       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+               G_IN_POINT   0x0000d5       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+              G_OUT_POINT   0x0000d6       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+               G_RINGBUFF   0x0000d7       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+             B_COEF_POINT   0x0000e7       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+                  B_COUNT   0x0000e8       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+               B_IN_POINT   0x0000e9       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+              B_OUT_POINT   0x0000ea       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+               B_RINGBUFF   0x0000eb       data     static C:\PIC_projects\ASM\Mood_Lamp_V2.1\Mood_Lamp_V2.X\Mood_Lamp_V2.ASM
+
+

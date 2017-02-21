@@ -1,0 +1,2508 @@
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE  1
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00001 ;******************************************************************************;
+                      00002 ;                                                                                                       
+                                                                               ;
+                      00003 ;    Filename:         18F13K50.asm                                                                     
+                                               ;
+                      00004 ;    Date:             Sunday, April 29, 2012                                  ;
+                      00005 ;    File Version:     v 1.0                                                   ;
+                      00006 ;    Author:           Charles Scoville. AKA: Oblivion                         ;
+                      00007 ;    Company:          Meh...                                                  ;
+                      00008 ;        Font:                     Any monospaced font                                                  
+                                               ;
+                      00009 ;        Purpose:                  Mood lamp using tri-color LEDs. A LFSR based RNG is used.
+                      00010 ;                                                                              ;
+                      00011 ; Notes:
+                      00012 ; For a 120Hz refresh rate the period is ~8.33ms.
+                      00013 ; At 8M cycles per second for ~8.3ms is ~66k cycles
+                      00014 ; 2^16 (65,536) cycles, as done by timer0, is damn close to this.
+                      00015 ; 0x0000 -> 0xffff at FOSC/4 = 8.192ms  (122.07Hz)
+                      00016 ;******************************************************************************;
+                      00017 ;                                                                              ;
+                      00018 ;   Files Required: P18F13K50.INC                                              ;
+                      00019 ;                                                                              ;
+                      00020 ;******************************************************************************;
+                      00021 ; Part and project pinout.
+                      00022 ;                              ____   ____
+                      00023 ;                             | o  \_/    |
+                      00024 ;         VDD - 5V power     [| 1       20|]    Vss - Ground
+                      00025 ;                             |           |
+                      00026 ;                            [| 2       19|]    ICSP-DAT
+                      00027 ;                             |           |
+                      00028 ;                            [| 3       18|]    ICSP-CLK
+                      00029 ;                             |           |
+                      00030 ;     VPP (MCLR internal)    [| 4       17|]    Vusb 3.3v reg (bypass with cap)
+                      00031 ;                             |           |
+                      00032 ;                      RC5 as R_4    [| 5       16|]    RC0 as R_1
+                      00033 ;                             |           |
+                      00034 ;                          RC4 as G_4    [| 6       15|]    RC1 as G_1
+                      00035 ;                             |           |
+                      00036 ;                          RC3 as B_4    [| 7       14|]    RC2 as B_1
+                      00037 ;                             |           |
+                      00038 ;                          RC6 as R_3    [| 8       13|]    RB4 as R_2
+                      00039 ;                             |           |
+                      00040 ;                          RC7 as G_3    [| 9       12|]    RB5 as G_2
+                      00041 ;                             |           |
+                      00042 ;              RB7 as B_3    [|10       11|]    RB6 as B_2
+                      00043 ;                             |___________|
+                      00044 ;
+                      00045 ;
+                      00046 ;_______________________________________________________________________________
+                      00047 ; PROCESSOR DECLARATION
+                      00048 ;_______________________________________________________________________________
+                      00049 
+                      00050     LIST      P=PIC18F13K50          ; list directive to define processor
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE  2
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00051     #INCLUDE <P18F13K50.INC>         ; processor specific variable definitions
+                      00001         LIST
+                      00002 
+                      00003 ;==========================================================================
+                      00004 ; Build date : Nov 17 2016
+                      00005 ;  MPASM PIC18F13K50 processor include
+                      00006 ; 
+                      00007 ;  (c) Copyright 1999-2016 Microchip Technology, All rights reserved
+                      00008 ;==========================================================================
+                      00009 
+                      01521         LIST
+                      00052 
+                      00053 ;_______________________________________________________________________________
+                      00054 ; Definitions and Declarations
+                      00055 ;_______________________________________________________________________________
+                      00056 ;;{
+                      00057                                                                          ; V PIN numbers V
+                      00058     #DEFINE     R_1             PWM_PINS+0,0 ; 16
+                      00059     #DEFINE     G_1             PWM_PINS+0,1 ; 15
+                      00060     #DEFINE     B_1             PWM_PINS+0,2 ; 14
+                      00061 
+                      00062     #DEFINE     R_2             PWM_PINS+1,4 ; 13
+                      00063     #DEFINE     G_2             PWM_PINS+1,5 ; 12
+                      00064     #DEFINE     B_2     PWM_PINS+1,6 ; 11
+                      00065 
+                      00066     #DEFINE     R_3     PWM_PINS+0,6 ; 8
+                      00067     #DEFINE     G_3     PWM_PINS+0,7 ; 9
+                      00068     #DEFINE     B_3     PWM_PINS+1,7 ; 10
+                      00069 
+                      00070     #DEFINE     R_4     PWM_PINS+0,5 ; 5
+                      00071     #DEFINE     G_4     PWM_PINS+0,4 ; 6
+                      00072     #DEFINE     B_4     PWM_PINS+0,3 ; 7
+                      00073 
+                      00074     #DEFINE TRUE        1
+                      00075     #DEFINE FALSE       -1
+                      00076     #DEFINE YES         1
+                      00077     #DEFINE NO          0
+                      00078     #DEFINE SUCCESS     1
+                      00079     #DEFINE FAILURE     -1
+                      00080 
+                      00081     #DEFINE PWM_RLD     FLAGS,0
+                      00082 
+                      00083     #DEFINE EERDWT      FLAGS,1
+                      00084 
+                      00085     #DEFINE RBS         FLAGS,2                                 
+                      00086     #DEFINE GBS         FLAGS,3         ; Ring buffer Selectors
+                      00087     #DEFINE BBS         FLAGS,4         ; *TODO* these aren't actually used
+                      00088 ;;}
+                      00089 ;_______________________________________________________________________________
+                      00090 
+                      00091 ;_______________________________________________________________________________
+                      00092 ; CONFIGURATION WORD SETUP
+                      00093 ;_______________________________________________________________________________
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE  3
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00094 ;;{
+                      00095      CONFIG CPUDIV      = NOCLKDIV      ; CPU runs at full 48Mhz clock speed
+                      00096          CONFIG USBDIV  = OFF           ; USB runs at full 48Mhz clock speed
+                      00097          CONFIG FOSC    = IRC           ; High Speed Xtal in use, so high drive needed
+                      00098          CONFIG PLLEN   = ON            ; 4x PLL is on. (12Mhz x 4 = 48Mhz)
+                      00099      CONFIG PCLKEN      = ON            ; Primary clock is on, (not software control)
+                      00100          CONFIG FCMEN   = OFF           ; Fail safe clock monitor is OFF
+                      00101          CONFIG IESO    = OFF           ; Switching the clock is DISABLED
+                      00102          CONFIG PWRTEN  = OFF           ; Powerup timer ON, CPU waits until power is stable
+                      00103          CONFIG BOREN   = OFF           ; Brown out reset DISABLED
+                      00104      CONFIG BORV        = 30            ; 3.0v; Highest Brown out voltage possible
+                      00105          CONFIG WDTEN   = OFF           ; Watch dog timer DISABLED
+                      00106          CONFIG WDTPS   = 1                     ; WDT post scaler, 1:1 (don't matter)
+                      00107          CONFIG MCLRE   = OFF           ; Master clear/reset is internal. RA3 is GPIO
+                      00108          CONFIG HFOFST  = OFF           ; System is held in reset untill clock is stable
+                      00109      CONFIG STVREN      = OFF           ; Hardware stack over/under flow disabled
+                      00110          CONFIG LVP     = OFF           ; Low voltage programming is OFF
+                      00111          CONFIG BBSIZ   = OFF           ; Boot block size is 512 words. (don't matter)
+                      00112          CONFIG XINST   = OFF           ; Extended C language instruction set is OFF
+                      00113 
+                      00114          CONFIG DEBUG   = OFF           ; Internal debugging hardware dissabled.
+                      00115 
+                      00116          CONFIG CP0     = OFF           ;
+                      00117      CONFIG CP1         = OFF           ;
+                      00118          CONFIG CPB     = OFF           ;
+                      00119          CONFIG CPD     = OFF           ;
+                      00120          CONFIG WRT0    = OFF           ;
+                      00121          CONFIG WRTB    = OFF           ;  ALL FORMS OF CODE PROTECTION ARE OFF
+                      00122      CONFIG WRTC        = OFF           ;
+                      00123          CONFIG WRTD    = OFF           ;
+                      00124          CONFIG EBTR0   = OFF           ;
+                      00125          CONFIG EBTR1   = OFF           ;
+                      00126          CONFIG EBTRB   = OFF           ;
+                      00127 ;;}
+                      00128 ;_______________________________________________________________________________
+                      00129 
+                      00130 ;_______________________________________________________________________________
+                      00131 ; Variables
+                      00132 ;_______________________________________________________________________________
+                      00133 ;;{
+                      00134 GPR_VAR        UDATA
+                      00135 ;INT_VAR        UDATA_ACS
+                      00136     ;CBLOCK 0x000 ; GPR variable register allocations
+                      00137     ;CBLOCK 0x008 ; GPR variable register allocations
+                      00138 
+                      00139 ; ISR shadow for important registers 
+000000                00140                 W_TEMP          RES     1
+000001                00141                 STATUS_TEMP     RES     1
+000002                00142                 BSR_TEMP        RES     1
+                      00143 
+000003                00144                 FLAGS   RES     1; Flags, for Yes/No things
+                      00145 
+                      00146 ; 8 bit PWM timers/Counters
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE  4
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+000004                00147                 R1_TIME RES     1
+000005                00148                 G1_TIME RES     1
+000006                00149                 B1_TIME RES     1
+                      00150 
+000007                00151                 R2_TIME RES     1
+000008                00152                 G2_TIME RES     1
+000009                00153                 B2_TIME RES     1
+                      00154 
+00000A                00155                 R3_TIME RES     1
+00000B                00156                 G3_TIME RES     1
+00000C                00157                 B3_TIME RES     1
+                      00158 
+00000D                00159                 R4_TIME RES     1
+00000E                00160                 G4_TIME RES     1
+00000F                00161                 B4_TIME RES     1
+                      00162 
+000010                00163                 DUMMY_TIME      RES     1; DUMMY_TIME is always 255, and sets the pace
+                      00164 
+000011                00165                 PWM_PINS        RES 2   ; This is the pin mask, used to change all pins at once.
+                      00166 
+                      00167     ; LFSR registars for PRNG
+000013                00168                 LFSR_01 RES     1
+000014                00169                 LFSR_02 RES     1
+000015                00170                 LFSR_03 RES     1
+000016                00171                 LFSR_04 RES     1
+000017                00172                 LFSR_05 RES     1
+000018                00173                 RAND    RES     1 ; Final 8 bit Random number
+                      00174 
+                      00175         ; EEPROM engine arguments
+                      00176                 ;WREG           ; Ram target address
+                      00177                 ;(bit)EERDWT; *TODO* Read/Write operation
+000019                00178                 EE_ADDRESS      RES     1 ; EEPROM target address
+00001A                00179                 EE_LENGTH       RES     1 ; Length of EEPROM data
+                      00180 
+                      00181         ; 24 bit Intermediate Hermite Products
+00001B                00182                 C0XP0   RES 3
+00001E                00183                 C1XP1   RES     3
+000021                00184                 C2XP2   RES     3
+000024                00185                 C3XP3   RES     3
+                      00186 
+                      00187         ; Temp storage for 16 bit Hermite coefficients, table look up
+000027                00188                 C0 RES  2
+000029                00189                 C1 RES  2
+00002B                00190                 C2 RES  2
+00002D                00191                 C3 RES  2
+                      00192 
+                      00193         ; Spline starting points. Filled with Random data, see "Fill_Buffer" sub
+00002F                00194                 P0      RES     1
+000030                00195                 P1      RES     1
+000031                00196                 P2      RES     1
+000032                00197                 P3      RES     1
+                      00198 
+000033                00199                 R_P0    RES     1
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE  5
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+000034                00200                 R_P1    RES     1
+000035                00201                 R_P2    RES     1
+000036                00202                 R_P3    RES     1
+                      00203 
+000037                00204                 G_P0    RES     1
+000038                00205                 G_P1    RES     1
+000039                00206                 G_P2    RES     1
+00003A                00207                 G_P3    RES     1
+                      00208 
+00003B                00209                 B_P0    RES     1
+00003C                00210                 B_P1    RES     1
+00003D                00211                 B_P2    RES     1
+00003E                00212                 B_P3    RES     1
+                      00213 
+                      00214         ; Ring buffer variables
+00003F                00215         _CHAR           RES     1
+000040                00216         _COEF_POINT     RES     1
+000041                00217         _COUNT          RES     1
+000042                00218         _OUT_POINT      RES     1
+000043                00219         _RINGBUFF_P     RES     1
+                      00220 
+000044                00221         PWM_COUNT               RES     1; Number of B ring buffer bytes used 
+000045                00222         PWM_IN_POINT    RES     1; Pointing to input address of ring buffer, the "head"
+000046                00223         PWM_OUT_POINT   RES     1; Pointing to output address of ring buffer, the "tail"
+000047                00224         PWM_RINGBUFF    RES .24 ; Actual ring buffer, 24 bytes long.
+                      00225 
+00005F                00226         R_COEF_POINT    RES     1
+000060                00227         R_COUNT                 RES     1 ; Number of R ring buffer bytes used
+000061                00228         R_IN_POINT              RES     1 ; Pointing to input address of ring buffer, the "head"
+000062                00229         R_OUT_POINT             RES     1 ; Pointing to output address of ring buffer, the "tail"
+000063                00230         R_RINGBUFF              RES     .16     ; Actual ring buffer, 16 bytes long.
+                      00231 
+000073                00232         G_COEF_POINT    RES     1
+000074                00233         G_COUNT                 RES     1; Number of G ring buffer bytes used
+000075                00234         G_IN_POINT              RES     1; Pointing to input address of ring buffer, the "head"
+000076                00235         G_OUT_POINT             RES     1; Pointing to output address of ring buffer, the "tail"
+000077                00236         G_RINGBUFF              RES     .16     ; Actual ring buffer, 16 bytes long.
+                      00237 
+000087                00238         B_COEF_POINT    RES     1
+000088                00239         B_COUNT                 RES     1; Number of B ring buffer bytes used 
+000089                00240         B_IN_POINT              RES     1; Pointing to input address of ring buffer, the "head"
+00008A                00241         B_OUT_POINT             RES     1; Pointing to output address of ring buffer, the "tail"
+00008B                00242         B_RINGBUFF              RES     .16     ; Actual ring buffer, 16 bytes long.
+                      00243     ;ENDC
+                      00244 ;;}
+                      00245 ;_______________________________________________________________________________
+                      00246 
+                      00247 ;_______________________________________________________________________________
+                      00248 ; EEPROM PRE-INITIALIZATION
+                      00249 ; The 18F13K50 has non-volatile memory (EEPROM) starting at 0xF00000
+                      00250 ;_______________________________________________________________________________
+                      00251 ;;{
+                      00252 DATAEE          ORG  0XF00000 ; Starting address for EEPROM for 18F13K50
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE  6
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00253 
+                      00254         ; Place seed for RNG in EEPROM
+F00000 ECCB A9A3 DAD9 00255     DE          "Ëì£©ÙÚ"  ; 6 bytes
+                      00256 
+                      00257 ; List of other seeds you could choose from. (generated with KeePass 2.34)
+                      00258 ;
+                      00259 ; "¸J/ªàr" ";û3Îú5" "Ëì£©ÙÚ" "Fgõá2¨" "¤¢Áo#s" "/8ê.F<" "Ïãñ{r®",
+                      00260 ; "Eúý°%?" "&ÍFUØe" "Á¨~·¬¡" "ø]q<õn" "ÉADÁqà" "MÃÚ2ÚP" "y$Ô/wu",
+                      00261 ; "e½ß°~ã" "Qoõo:}" ">ºÎó¬$" "Tô¦MJÐ" "~V-þ&Î" "²~VÔ%ð" "2ªüCò[",
+                      00262 ; "Ô§4Æx¦" ")ÐBÈþú" "Ö ý~¥!" "ÄËDáËþ" "Ø_ÞD,÷" "ï¨ðXKj" "ëv+.®.",
+                      00263 ;;}
+                      00264 ;_______________________________________________________________________________
+                      00265 
+                      00266 ;_______________________________________________________________________________
+                      00267 ; RESET VECTOR
+                      00268 ;_______________________________________________________________________________
+                      00269 CODE
+                      00270 RES_VECT        ORG     0X0000            ; processor reset vector
+000000 EF?? F???      00271     GOTO    START             ; go to beginning of program
+                      00272 
+                      00273 ;_______________________________________________________________________________
+                      00274 ; INTERRUPT VECTORS
+                      00275 ;_______________________________________________________________________________
+                      00276 ;;{
+                      00277 ISRH            ORG     0X0008
+                      00278 
+                      00279     ; Run the low Priority Interrupt Service Routine
+000008 EF?? F???      00280     GOTO    LOW_ISR
+                      00281 ;*******************************************************************************
+                      00282 ; Note: When priority interrupt is disabled, all int-vectors remap to 0x0008.
+                      00283 ;*******************************************************************************
+                      00284 ISRL            ORG     0X0018
+                      00285 
+                      00286     ; Run the low Priority Interrupt Service Routine
+000018 EF?? F???      00287     GOTO    LOW_ISR 
+                      00288 ;;}
+                      00289 ;_______________________________________________________________________________
+                      00290 
+                      00291 ;_______________________________________________________________________________
+                      00292 ; INTERRUPT SERVICE ROUTINES
+                      00293 ;_______________________________________________________________________________
+                      00294 ;;{
+00001C                00295 LOW_ISR
+                      00296                 ; Context Saving for Low ISR
+00001C 6E??           00297     MOVWF   W_TEMP              ; save W register
+00001E CFD8 F???      00298     MOVFF   STATUS, STATUS_TEMP ; save status register
+000022 CFE0 F???      00299     MOVFF   BSR, BSR_TEMP       ; save bankselect register
+                      00300 
+000026 A4F2           00301     BTFSS       INTCON,TMR0IF           ; Test to see if Timer0 is what caused
+000028 D???           00302     BRA         END_INT                         ; this interupt. If so handle it.
+                      00303 
+                      00304 ;-------------------------------------------------------------------------------
+                      00305 ; Timer0 interrupt service
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE  7
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00306 ;
+                      00307 ; The only thing that should be done here is loading the new delay and changing 
+                      00308 ; pins
+                      00309 ;
+                      00310 ; *TODO* these full reads are probably actually excessive. Yet another buffer
+                      00311 ; for each of these would probably be better performing. Then it could just be 
+                      00312 ; 3 MOVFF's
+                      00313 
+00002A D???           00314     RCALL       READ_BUFFER_PWM         ; First byte in buffer is delay
+00002C 6ED7           00315     MOVWF       TMR0H                           ; until next change in output.
+                      00316 
+00002E D???           00317     RCALL       READ_BUFFER_PWM         ; Next two bytes are the pin masks
+000030 168B           00318     ANDWF       LATC                            ; 
+000032 D???           00319     RCALL       READ_BUFFER_PWM         ; Note that this is ANDed, so preserves
+000034 168A           00320     ANDWF       LATB                            ; the state of bits not 0 in the mask.
+                      00321 
+000036 6AD6           00322     CLRF        TMR0L           ; <--- This is the exact point Timer0 gets updated
+                      00323 ;-------------------------------------------------------------------------------
+                      00324 
+000038 94F2           00325     BCF         INTCON, TMR0IF          ; Reset Timer0 interupt flag
+                      00326 
+00003A                00327 END_INT    ; Context Saving for Low ISR
+00003A C??? FFE0      00328     MOVFF   BSR_TEMP, BSR       ; restore bankselect register
+00003E 50??           00329     MOVF    W_TEMP, W           ; restore W register
+000040 C??? FFD8      00330     MOVFF   STATUS_TEMP, STATUS ; restore status register
+000044 0010           00331     RETFIE ;
+                      00332 ;;}
+                      00333 ;_______________________________________________________________________________
+                      00334 
+                      00335 ;_______________________________________________________________________________
+                      00336 ; INITIALIZE SYSTEM
+                      00337 ;_______________________________________________________________________________
+                      00338 ;;{
+                      00339 ;*******************************************************************************
+                      00340 ; First some general setup to make all the pins behave as they are supposed to.
+                      00341 ;*******************************************************************************
+000046                00342 START           
+                      00343         ; Initialize GPRs _________________________________________
+000046 EE00 F000      00344     LFSR    FSR0, 000H   ; 
+00004A 6AEE           00345     CLRF    POSTINC0     ; Clear INDF register then inc pointer
+00004C A0EA           00346     BTFSS   FSR0H, 0     ; All done with Bank1?
+00004E D???           00347     BRA     $ - .4        ; NO, clear next | YES, continue
+                      00348 
+000050 B2EA           00349         BTFSC   FSR0H, 1         ; Done bank 2 yet?
+000052 D???           00350         BRA             $ + .8           ; 
+000054 82EA           00351         BSF             FSR0H, 1         ; Move on to bank 3
+000056 90EA           00352         BCF             FSR0H, 0
+000058 D???           00353         BRA             $ - .14          ;
+                      00354         ;__________________________________________________________
+                      00355         
+                      00356         ; Initialize Ring buffers _________________________________
+00005A 0E??           00357     MOVLW       R_RINGBUFF       ; Initilize the ring buffer
+00005C 6E??           00358     MOVWF       R_IN_POINT       ; to known good state.
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE  8
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+00005E 6E??           00359     MOVWF       R_OUT_POINT      ; (sort of... it still could have data)
+                      00360 
+000060 0E??           00361     MOVLW       G_RINGBUFF       ; Initilize the ring buffer
+000062 6E??           00362     MOVWF       G_IN_POINT       ; to known good state.
+000064 6E??           00363     MOVWF       G_OUT_POINT      ; (sort of... it still could have data)
+                      00364 
+000066 0E??           00365     MOVLW       B_RINGBUFF       ; Initilize the ring buffer
+000068 6E??           00366     MOVWF       B_IN_POINT       ; to known good state.
+00006A 6E??           00367     MOVWF       B_OUT_POINT      ; (sort of... it still could have data) 
+                      00368 
+00006C 0E??           00369     MOVLW       PWM_RINGBUFF ; Initilize the ring buffer
+00006E 6E??           00370     MOVWF       PWM_IN_POINT ; to known good state.
+000070 6E??           00371     MOVWF       PWM_OUT_POINT; (sort of... it still could have data)
+                      00372                         ;__________________________________________________________
+                      00373 
+                      00374         ; Initialize PRNG ________________________________________
+                      00375         ;CLRF   EE_ADDRESS       ; Load the first EE address (0x00).
+                      00376         
+000072 0E06           00377     MOVLW       .6                       ; We're getting 6 bytes
+000074 6E??           00378     MOVWF       EE_LENGTH        ; 
+                      00379 
+000076 0E??           00380     MOVLW       LFSR_01          ; The target RAM is the LFSR
+000078 EC?? F???      00381     CALL        EE_READ      ; 
+                      00382         ;__________________________________________________________
+                      00383 
+00007C 68??           00384     SETF        DUMMY_TIME       ; Set PWM loop to known state, make sure
+00007E 80??           00385     BSF         PWM_RLD          ; it knows the data is invalid though
+                      00386 
+                      00387         ;RCALL  Fill_Buffer ; Generate some random points
+                      00388 
+                      00389 ;-------------------------------------------------------------------------------
+                      00390 ; Processor specific setup. If you're porting to a different PIC, or changing 
+                      00391 ; the circuit, stuff below here needs to reflect this.
+                      00392 ;-------------------------------------------------------------------------------
+000080 6AD6           00393     CLRF        TMR0L
+000082 6AD7           00394     CLRF        TMR0H
+                      00395 
+                      00396 ; *TODO* Prescaler is a convient way to control rate of change for colors.
+000084 0E88           00397     MOVLW       B'10001000'
+                      00398 ;                                         ||||||||__                                    
+                      00399 ;                                         |||||||___\ __ T0PS0:2                Prescaler.
+                      00400 ;                                         ||||||____/ 
+                      00401 ;                                         |||||_________ PSA                    1 = Timer0 Prescaler byp
+                            assed
+                      00402 ;                                         ||||
+                      00403 ;                                         ||||__________ T0SE                   Edge select. 0 = L2H
+                      00404 ;                                         |||
+                      00405 ;                                         |||___________ T0CS                   0 = Internal clock
+                      00406 ;                                         ||
+                      00407 ;                                         ||____________ T0 8BIT/16bit  0 = 16bit mode
+                      00408 ;                                         |
+                      00409 ;                                         |_____________ TMR0ON                 1 = ON, 0 = OFF
+000086 6ED5           00410     MOVWF       T0CON
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE  9
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00411 
+000088 8CF2           00412     BSF         INTCON, PEIE   ; Enable peripheral interupt
+                      00413 
+00008A 8AF2           00414     BSF         INTCON, TMR0IE ; Enable Timer0 interupt
+                      00415 
+00008C 90C2           00416     BCF         ADCON0, ADON   ; Turn off the ADC when not in use.
+                      00417 
+00008E 0E00           00418     MOVLW       B'00000000'        ; Some port pins are multiplexed with analog  
+000090 6E7E           00419     MOVWF       ANSEL              ; functions. Clearing an ANSELx bit enables
+000092 0E00           00420     MOVLW       B'00000000'        ; digital functionality.
+000094 6E7F           00421     MOVWF       ANSELH             ; *** DON'T CLEAR IF ANALOG SIGNAL IS PRESENT ***
+                      00422 
+000096 6A94           00423     CLRF        TRISC              ; Make PORTC all outputs
+                      00424 
+000098 0E0F           00425     MOVLW       B'00001111'        ; Make most the significant
+00009A 1693           00426     ANDWF       TRISB              ; nyble of PORTB outputs.
+                      00427 
+00009C 8EF2           00428     BSF         INTCON, GIE        ; Enable global interupts last
+                      00429 ;;}
+                      00430 ;_______________________________________________________________________________
+                      00431 
+                      00432 ;_______________________________________________________________________________
+                      00433 ; MAIN PROGRAM LOOP
+                      00434 ;_______________________________________________________________________________
+00009E                00435 MAIN
+                      00436 
+                      00437 ;===============================================================================
+                      00438 ; Determine lighting mode (Human input, default mode)
+                      00439 ;;{
+                      00440 ; *TODO* All of this
+                      00441 ;;}
+                      00442 ;===============================================================================
+                      00443 
+                      00444 
+                      00445 ;===============================================================================
+                      00446 ; Compute color data and load buffers
+                      00447 ;;{
+                      00448 ; Check to see if R channel's ring buffer is full.
+00009E 0E10           00449     MOVLW       .16
+0000A0 60??           00450     CPFSLT      R_COUNT
+0000A2 D???           00451     BRA         _FILL_G
+                      00452 
+                      00453 ; Load channel related variables for passing to Cubic Hermite routine
+0000A4 C??? F???      00454     MOVFF       R_P0, P0
+0000A8 C??? F???      00455     MOVFF       R_P1, P1
+0000AC C??? F???      00456     MOVFF       R_P2, P2
+0000B0 C??? F???      00457     MOVFF       R_P3, P3
+0000B4 C??? F???      00458     MOVFF       R_COEF_POINT, _COEF_POINT
+0000B8 C??? F???      00459     MOVFF       R_COUNT, _COUNT
+0000BC C??? FFE9      00460     MOVFF       R_IN_POINT, FSR0L
+0000C0 0E??           00461     MOVLW       R_RINGBUFF
+0000C2 6E??           00462     MOVWF       _RINGBUFF_P
+                      00463 
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE 10
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00464 ; This does as much Cubic Hermite on the loaded channel as is possible.
+0000C4 D???           00465     RCALL       CUBIC_HERMITE
+                      00466 
+                      00467 ; Save off this channels variables so we can move to the next.
+0000C6 C??? F???      00468     MOVFF       P0, R_P0
+0000CA C??? F???      00469     MOVFF       P1, R_P1
+0000CE C??? F???      00470     MOVFF       P2, R_P2
+0000D2 C??? F???      00471     MOVFF       P3, R_P3
+0000D6 C??? F???      00472     MOVFF       _COEF_POINT, R_COEF_POINT
+0000DA C??? F???      00473     MOVFF       _COUNT, R_COUNT
+0000DE CFE9 F???      00474     MOVFF       FSR0L, R_IN_POINT
+                      00475 
+0000E2                00476 _FILL_G
+0000E2 0E10           00477     MOVLW       .16
+0000E4 60??           00478     CPFSLT      G_COUNT
+0000E6 D???           00479     BRA         _FILL_B
+                      00480 
+0000E8 C??? F???      00481     MOVFF       G_P0, P0
+0000EC C??? F???      00482     MOVFF       G_P1, P1
+0000F0 C??? F???      00483     MOVFF       G_P2, P2
+0000F4 C??? F???      00484     MOVFF       G_P3, P3
+0000F8 C??? F???      00485     MOVFF       G_COEF_POINT, _COEF_POINT
+0000FC C??? F???      00486     MOVFF       G_COUNT, _COUNT
+000100 C??? FFE9      00487     MOVFF       G_IN_POINT, FSR0L
+000104 0E??           00488     MOVLW       G_RINGBUFF
+000106 6E??           00489     MOVWF       _RINGBUFF_P
+                      00490 
+000108 D???           00491     RCALL       CUBIC_HERMITE
+                      00492 
+00010A C??? F???      00493     MOVFF       P0, G_P0
+00010E C??? F???      00494     MOVFF       P1, G_P1
+000112 C??? F???      00495     MOVFF       P2, G_P2
+000116 C??? F???      00496     MOVFF       P3, G_P3
+00011A C??? F???      00497     MOVFF       _COEF_POINT, G_COEF_POINT
+00011E C??? F???      00498     MOVFF       _COUNT, G_COUNT
+000122 CFE9 F???      00499     MOVFF       FSR0L, G_IN_POINT
+                      00500 
+000126                00501 _FILL_B
+000126 0E10           00502     MOVLW       .16
+000128 60??           00503     CPFSLT      B_COUNT
+00012A D???           00504     BRA         _LOAD_TIMERS
+                      00505 
+00012C C??? F???      00506     MOVFF       B_P0, P0
+000130 C??? F???      00507     MOVFF       B_P1, P1
+000134 C??? F???      00508     MOVFF       B_P2, P2
+000138 C??? F???      00509     MOVFF       B_P3, P3
+00013C C??? F???      00510     MOVFF       B_COEF_POINT, _COEF_POINT
+000140 C??? F???      00511     MOVFF       B_COUNT, _COUNT
+000144 C??? FFE9      00512     MOVFF       B_IN_POINT, FSR0L
+000148 0E??           00513     MOVLW       B_RINGBUFF
+00014A 6E??           00514     MOVWF       _RINGBUFF_P
+                      00515 
+00014C D???           00516     RCALL       CUBIC_HERMITE
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE 11
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00517 
+00014E C??? F???      00518     MOVFF       P0, B_P0
+000152 C??? F???      00519     MOVFF       P1, B_P1
+000156 C??? F???      00520     MOVFF       P2, B_P2
+00015A C??? F???      00521     MOVFF       P3, B_P3
+00015E C??? F???      00522     MOVFF       _COEF_POINT, B_COEF_POINT
+000162 C??? F???      00523     MOVFF       _COUNT, B_COUNT
+000166 CFE9 F???      00524     MOVFF       FSR0L, B_IN_POINT
+                      00525 
+                      00526 
+00016A                00527 _LOAD_TIMERS
+                      00528 ; Once we have interpolated on our randomly generated points, we finally have 
+                      00529 ; some timeing data to load. This simple routing fills the delays with that data
+                      00530 ; This area is where you would modify the loop to get different effects.
+00016A A0??           00531     BTFSS       PWM_RLD
+00016C D???           00532     BRA         _FILL_PWM
+                      00533 
+00016E D???           00534     RCALL       READ_BUFFER_R
+000170 6E??           00535     MOVWF       R1_TIME
+000172 6E??           00536     MOVWF       R2_TIME
+000174 6E??           00537     MOVWF       R3_TIME
+000176 6E??           00538     MOVWF       R4_TIME
+                      00539 
+000178 D???           00540     RCALL       READ_BUFFER_G
+00017A 6E??           00541     MOVWF       G1_TIME
+00017C 6E??           00542     MOVWF       G2_TIME
+00017E 6E??           00543     MOVWF       G3_TIME
+000180 6E??           00544     MOVWF       G4_TIME
+                      00545 
+000182 D???           00546     RCALL       READ_BUFFER_B
+000184 6E??           00547     MOVWF       B1_TIME
+000186 6E??           00548     MOVWF       B2_TIME
+000188 6E??           00549     MOVWF       B3_TIME
+00018A 6E??           00550     MOVWF       B4_TIME
+                      00551 
+00018C 90??           00552     BCF         PWM_RLD
+                      00553 
+00018E                00554 _FILL_PWM
+00018E B0??           00555     BTFSC       PWM_RLD
+000190 D???           00556     BRA         _LOAD_TIMERS    
+                      00557 
+000192 0E16           00558     MOVLW       .22
+000194 60??           00559     CPFSLT      PWM_COUNT
+000196 D???           00560     BRA         MAIN
+                      00561 
+000198 C??? F???      00562     MOVFF       PWM_COUNT, _COUNT
+00019C C??? FFE9      00563     MOVFF       PWM_IN_POINT, FSR0L
+0001A0 0E??           00564     MOVLW       PWM_RINGBUFF
+0001A2 6E??           00565     MOVWF       _RINGBUFF_P
+                      00566 
+0001A4 D???           00567     RCALL       TIME_DOWN
+                      00568                                 
+0001A6 C??? F???      00569     MOVFF       _COUNT, PWM_COUNT
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE 12
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0001AA CFE9 F???      00570     MOVFF       FSR0L, PWM_IN_POINT
+                      00571 
+0001AE D???           00572     BRA         _FILL_PWM
+                      00573 ;;}
+                      00574 ;===============================================================================
+                      00575 
+                      00576 ;    BRA        MAIN        ; loop program to beginning
+                      00577 
+                      00578 ;_______________________________________________________________________________
+                      00579 ;                                Subroutines
+                      00580 ;_______________________________________________________________________________
+                      00581 
+                      00582 ;-----------------------------------------;
+                      00583 ; Decrement timers and buffer bit changes ;
+                      00584 ;_______________________________________________________________________________
+                      00585 ;;{
+0001B0                00586 TIME_DOWN
+                      00587 ;       Find the smallest delay, move it to working.
+0001B0 50??           00588     MOVF        R1_TIME,W
+0001B2 64??           00589     CPFSGT      G1_TIME
+0001B4 50??           00590     MOVF        G1_TIME,W
+0001B6 64??           00591     CPFSGT      B1_TIME
+0001B8 50??           00592     MOVF        B1_TIME,W
+                      00593 
+0001BA 64??           00594     CPFSGT      R2_TIME
+0001BC 50??           00595     MOVF        R2_TIME,W
+0001BE 64??           00596     CPFSGT      G2_TIME
+0001C0 50??           00597     MOVF        G2_TIME,W
+0001C2 64??           00598     CPFSGT      B2_TIME
+0001C4 50??           00599     MOVF        B2_TIME,W
+                      00600 
+0001C6 64??           00601     CPFSGT      R3_TIME
+0001C8 50??           00602     MOVF        R3_TIME,W
+0001CA 64??           00603     CPFSGT      G3_TIME
+0001CC 50??           00604     MOVF        G3_TIME,W
+0001CE 64??           00605     CPFSGT      B3_TIME
+0001D0 50??           00606     MOVF        B3_TIME,W
+                      00607 
+0001D2 64??           00608     CPFSGT      R4_TIME
+0001D4 50??           00609     MOVF        R4_TIME,W
+0001D6 64??           00610     CPFSGT      G4_TIME
+0001D8 50??           00611     MOVF        G4_TIME,W
+0001DA 64??           00612     CPFSGT      B4_TIME
+0001DC 50??           00613     MOVF        B4_TIME,W
+                      00614 
+0001DE 64??           00615     CPFSGT      DUMMY_TIME
+0001E0 50??           00616     MOVF        DUMMY_TIME, W
+                      00617 
+                      00618 ; WREG now contains the smallest delay, now subtract that from all the delays.
+                      00619  
+0001E2 5E??           00620     SUBWF       DUMMY_TIME,F    ; If we go over 255, our PWM period
+0001E4 E0??           00621     BZ          TIME_UP                 ; has been reached, so issue a reset
+                      00622 
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE 13
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0001E6 2AE8           00623     INCF        WREG                    ; Inc so we can get a carry out
+                      00624 
+                      00625 ; This next part is kinda trick actually.
+                      00626 ;
+                      00627 ; When a delay overflows, it's associated pin needs a state change. The naive
+                      00628 ; aproach would be to simply test for zero, then set/clear a bit. That takes
+                      00629 ; 3 instructions per bit. We can do better though ;) The subtract instruction 
+                      00630 ; has a TRUE/FALSE result, the carry bit, which we CAN just shift into some
+                      00631 ; other buffer. After shifting every bit, we end up with a mask that can simply
+                      00632 ; be copied to the Latch register as is. The only intricacy is that we have to 
+                      00633 ; do it in the proper order for the resulting mask to match the pinout.
+                      00634 
+                      00635 ; Use this as a reference for the order the mask needs to be created
+                      00636 ;               #define R_1             LATC,0 ; 16
+                      00637 ;               #define G_1             LATC,1 ; 15
+                      00638 ;               #define B_1             LATC,2 ; 14
+                      00639 ;               #define B_4     LATC,3 ; 7
+                      00640 ;               #define G_4     LATC,4 ; 6
+                      00641 ;               #define R_4     LATC,5 ; 5
+                      00642 ;               #define R_3     LATC,6 ; 8
+                      00643 ;               #define G_3     LATC,7 ; 9
+                      00644 
+                      00645 ;               #define R_2             LATB,4 ; 13
+                      00646 ;               #define G_2             LATB,5 ; 12
+                      00647 ;               #define B_2     LATB,6 ; 11
+                      00648 ;               #define B_3     LATB,7 ; 10
+                      00649 
+0001E8 5E??           00650     SUBWF       G3_TIME,F
+0001EA 36??           00651     RLCF        PWM_PINS+0,F
+0001EC 5E??           00652     SUBWF       R3_TIME,F
+0001EE 36??           00653     RLCF        PWM_PINS+0,F
+0001F0 5E??           00654     SUBWF       R4_TIME,F
+0001F2 36??           00655     RLCF        PWM_PINS+0,F
+0001F4 5E??           00656     SUBWF       G4_TIME,F
+0001F6 36??           00657     RLCF        PWM_PINS+0,F
+0001F8 5E??           00658     SUBWF       B4_TIME,F
+0001FA 36??           00659     RLCF        PWM_PINS+0,F
+0001FC 5E??           00660     SUBWF       B1_TIME,F
+0001FE 36??           00661     RLCF        PWM_PINS+0,F
+000200 5E??           00662     SUBWF       G1_TIME,F
+000202 36??           00663     RLCF        PWM_PINS+0,F
+000204 5E??           00664     SUBWF       R1_TIME,F
+000206 36??           00665     RLCF        PWM_PINS+0,F
+                      00666 
+000208 68??           00667     SETF        PWM_PINS+1
+                      00668 
+00020A 5E??           00669     SUBWF       B3_TIME,F
+00020C 36??           00670     RLCF        PWM_PINS+1,F
+00020E 5E??           00671     SUBWF       B2_TIME,F
+000210 36??           00672     RLCF        PWM_PINS+1,F
+000212 5E??           00673     SUBWF       G2_TIME,F
+000214 36??           00674     RLCF        PWM_PINS+1,F
+000216 5E??           00675     SUBWF       R2_TIME,F
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE 14
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+000218 36??           00676     RLCF        PWM_PINS+1,F
+                      00677 
+                      00678 ; WREG still has the lowest delay. Let's buffer it. 
+                      00679 
+00021A 06E8           00680     DECF        WREG
+00021C D???           00681     RCALL       WRITE_PWM_BUFFER
+                      00682 
+                      00683 ; Also output the mask for the pins that will switch next.
+                      00684 
+00021E 50??           00685     MOVF        PWM_PINS+0,W
+000220 D???           00686     RCALL       WRITE_PWM_BUFFER
+                      00687 
+000222 50??           00688     MOVF        PWM_PINS+1,W
+000224 D???           00689     RCALL       WRITE_PWM_BUFFER
+                      00690 
+000226 0C01           00691     RETLW       SUCCESS
+                      00692 
+000228                00693 TIME_UP
+000228 D???           00694     RCALL       WRITE_PWM_BUFFER
+                      00695 
+00022A 06??           00696     DECF        DUMMY_TIME
+                      00697 
+00022C 6A??           00698     CLRF        PWM_PINS+0
+00022E 50??           00699     MOVF        PWM_PINS+0, W
+000230 D???           00700     RCALL       WRITE_PWM_BUFFER
+                      00701 
+000232 0EF0           00702     MOVLW       B'11110000'                     ; Need to leave the top pins alone.
+000234 6E??           00703     MOVWF       PWM_PINS+1                      ;
+                      00704 
+000236 50??           00705     MOVF        PWM_PINS+1, W
+000238 D???           00706     RCALL       WRITE_PWM_BUFFER
+                      00707 
+00023A 80??           00708     BSF         PWM_RLD
+00023C 0CFF           00709     RETLW       FAILURE
+                      00710 ;;}
+                      00711 ;_______________________________________________________________________________
+                      00712 
+                      00713 ;--------------------------------------------------;
+                      00714 ; Fill the starting point buffers with random data ;
+                      00715 ;_______________________________________________________________________________
+                      00716 ;;{
+00023E                00717 FILL_BUFFER
+00023E EE?? F0??      00718     LFSR    FSR0, R_P0          ; Load pointer to the interpolant data points.
+                      00719                         
+000242                00720 GEN_LOOP                
+000242 D???           00721         RCALL   GEN_RANDOM              ; Generate a new random number from the LFSR
+                      00722 
+000244 C??? FFEE      00723     MOVFF       RAND, POSTINC0  ; Mov RAND to *FSR
+                      00724 
+000248 0E??           00725     MOVLW       B_P3                    ; 
+00024A 64E9           00726     CPFSGT      FSR0L                   ; if interpolant pointer > last point
+00024C D???           00727     BRA         GEN_LOOP                ; move on.
+00024E 0012           00728     RETURN
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE 15
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00729 ;;}
+                      00730 ;_______________________________________________________________________________
+                      00731 
+                      00732 ;----------------------------------------------------------;
+                      00733 ; Cubic Hermite Interpolation, using precomputed constants ;
+                      00734 ;_______________________________________________________________________________
+                      00735 ;;{
+                      00736 ;*******************************************************************************
+                      00737 ; Big thanks to Robert Bristow-Johnson, and Olli Niemitalo from signal processing 
+                      00738 ; Stack Exchange. Without these two, I never would have understood how to do this.
+                      00739 ; Here is a (split) URL to my question, and their response, for more info.
+                      00740 ;
+                      00741 ; http://dsp.stackexchange.com/questions/36250/
+                      00742 ; algorithm-for-1d-spline-interpolation-suitable-for-8-bit-microcontroler
+                      00743 ;
+                      00744 ;*******************************************************************************
+                      00745 ;
+                      00746 ; There are (at least) two ways to do this calculation
+                      00747 ;
+                      00748 ;       (1): (C1*P1 + C2*P2)-(C0*P0 + C3*P3)
+                      00749 ;       (2): (((C1*P1 + C2*P2)- C0*P0) - C3*P3)
+                      00750 ; 
+                      00751 ; The addition rutine has a single bit overflow, using it twice would compound 
+                      00752 ; the issue. The subtraction can handle it by assuming a borrow was an addition 
+                      00753 ; overflow. So the number 2 case is the prefered way to do this.
+                      00754 ;_______________________________________________________________________________
+                      00755 
+000250                00756 CUBIC_HERMITE
+000250 D???           00757     RCALL       GET_COEF                ; Load the coefficents for our fractional step
+                      00758 
+000252 3EE8           00759     INCFSZ      WREG                    ; Sub returns FAILURE status when the
+000254 D???           00760     BRA         ITTERATE                ; fraction is 0, meaning output = P1
+                      00761 
+                      00762 ; Cycle points
+                      00763 ;-------------------------------------------------------------------------------
+000256 C??? F???      00764     MOVFF       P1,P0                   ; To keep the curvy line smooth and 
+00025A C??? F???      00765     MOVFF       P2,P1                   ; break free, we "slide" the control
+00025E C??? F???      00766     MOVFF       P3,P2                   ; points back down, and load one more
+                      00767                                                         ; random byte on the top 
+                      00768                         
+000262 D???           00769     RCALL       GEN_RANDOM              ; Generate a new random number from the LFSR
+                      00770 
+000264 C??? F???      00771     MOVFF       RAND, P3                ; Load our adjusted random number
+                      00772 ;-------------------------------------------------------------------------------
+                      00773 
+000268 50??           00774     MOVF        P1,W                    ; Since we are starting from 0, output = P1
+                      00775 
+00026A                00776 WRITE_BUFFER
+00026A D???           00777     RCALL       WRITE_RING_BUFFER
+                      00778 
+00026C 3EE8           00779     INCFSZ      WREG
+00026E D???           00780     BRA         CUBIC_HERMITE
+000270 0012           00781     RETURN
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE 16
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00782 
+                      00783 ;-------------------------------------------------------------------------------
+                      00784 ;       16x8 Bit Unsigned Fixed Point Multiply 16 x 08 -> 24
+                      00785 ;
+                      00786 ;       Input:  16 bit unsigned fixed point multiplicand in Cn+0 and Cn+1
+                      00787 ;                       8 bit unsigned fixed point multiplier in Pn
+                      00788 ;
+                      00789 ;       Output: 24 bit unsigned fixed point product in CnxPn+0, CnxPn+1, CnxPn+2
+                      00790 ;-------------------------------------------------------------------------------
+                      00791 
+000272                00792 ITTERATE
+                      00793 ; C1*P1
+000272 50??           00794     MOVF        P0, W
+000274 02??           00795     MULWF       C0+1
+000276 CFF4 F???      00796     MOVFF       PRODH, C0XP0+2
+00027A CFF3 F???      00797     MOVFF       PRODL, C0XP0+1
+00027E 02??           00798     MULWF       C0+0
+000280 CFF3 F???      00799     MOVFF       PRODL, C0XP0+0
+000284 50F4           00800     MOVF        PRODH, W
+000286 26??           00801     ADDWF       C0XP0+1, F
+000288 E3??           00802     BNC         $ + 4
+00028A 2A??           00803     INCF        C0XP0+2
+                      00804 ; C2*P2
+00028C 50??           00805     MOVF        P1, W
+00028E 02??           00806     MULWF       C1+1
+000290 CFF4 F???      00807     MOVFF       PRODH, C1XP1+2
+000294 CFF3 F???      00808     MOVFF       PRODL, C1XP1+1
+000298 02??           00809     MULWF       C1+0
+00029A CFF3 F???      00810     MOVFF       PRODL, C1XP1+0
+00029E 50F4           00811     MOVF        PRODH, W
+0002A0 26??           00812     ADDWF       C1XP1+1, F
+0002A2 E3??           00813     BNC         $ + 4
+0002A4 2A??           00814     INCF        C1XP1+2
+                      00815 ; C0*P0
+0002A6 50??           00816     MOVF        P2, W
+0002A8 02??           00817     MULWF       C2+1
+0002AA CFF4 F???      00818     MOVFF       PRODH, C2XP2+2
+0002AE CFF3 F???      00819     MOVFF       PRODL, C2XP2+1
+0002B2 02??           00820     MULWF       C2+0
+0002B4 CFF3 F???      00821     MOVFF       PRODL, C2XP2+0
+0002B8 50F4           00822     MOVF        PRODH, W
+0002BA 26??           00823     ADDWF       C2XP2+1, F
+0002BC E3??           00824     BNC         $ + 4
+0002BE 2A??           00825     INCF        C2XP2+2
+                      00826 ; C3*P3
+0002C0 50??           00827     MOVF        P3, W
+0002C2 02??           00828     MULWF       C3+1
+0002C4 CFF4 F???      00829     MOVFF       PRODH, C3XP3+2
+0002C8 CFF3 F???      00830     MOVFF       PRODL, C3XP3+1
+0002CC 02??           00831     MULWF       C3+0
+0002CE CFF3 F???      00832     MOVFF       PRODL, C3XP3+0
+0002D2 50F4           00833     MOVF        PRODH, W
+0002D4 26??           00834     ADDWF       C3XP3+1, F
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE 17
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0002D6 E3??           00835     BNC         $ + 4
+0002D8 2A??           00836     INCF        C3XP3+2
+                      00837 ;
+                      00838 ; 24 bit addition with carry through.
+                      00839 ; Operation: C2xP2 + C1xP1 => C1xP1
+                      00840 ;
+0002DA 50??           00841     MOVF    C2XP2+0,W           ; Get low byte
+0002DC 26??           00842     ADDWF   C1XP1+0,F           ; Add to destination
+0002DE 50??           00843     MOVF    C2XP2+1,W           ; Get high byte
+0002E0 22??           00844     ADDWFC  C1XP1+1,F           ; Add high byte + carry
+0002E2 50??           00845     MOVF    C2XP2+2,W           ;
+0002E4 22??           00846     ADDWFC  C1XP1+2,F           ; Add high byte + carry
+                      00847 
+                      00848 ;-------------------------------------------------------------------------------
+                      00849 ; There is an edge case where this last ADDWFC instruction results in a carry. 
+                      00850 ; This ignored here because it's handled when the subtraction results in borrow.
+                      00851 ;-------------------------------------------------------------------------------
+                      00852 ;
+                      00853 ; 24 bit subtraction: C1xP1 - C0xP0 => C1xP1
+                      00854 ; Carry is preserved.
+                      00855 ;
+0002E6 50??           00856     MOVF    C0XP0+0,W           ; 
+0002E8 5E??           00857     SUBWF   C1XP1+0,F           ; 
+0002EA 50??           00858     MOVF    C0XP0+1,W           ; Chain of subtractions with borrow
+0002EC 5A??           00859     SUBWFB      C1XP1+1,F               ; 
+0002EE 50??           00860     MOVF    C0XP0+2,W           ; 
+0002F0 5A??           00861     SUBWFB      C1XP1+2,F               ; 
+                      00862 
+0002F2 E2??           00863     BC          $ + .8                  ; 
+0002F4 68E8           00864     SETF        WREG                    ; For the edge case where we borrow on  
+0002F6 26??           00865     ADDWF       C1XP1+2,F               ; the high byte, add 255+1 (256) to it.
+0002F8 2A??           00866     INCF        C1XP1+2,F               ; (There could only have been 1 carry bit)
+                      00867 ;
+                      00868 ; 24 bit subtraction: C1xP1 - C3xP3 => C1xP1
+                      00869 ; Carry is preserved.
+                      00870 ;
+0002FA 50??           00871     MOVF    C3XP3+0,W           ; 
+0002FC 5E??           00872     SUBWF   C1XP1+0,F           ; 
+0002FE 50??           00873     MOVF    C3XP3+1,W           ; Chain of subtractions with borrow
+000300 5A??           00874     SUBWFB      C1XP1+1,F               ; 
+000302 50??           00875     MOVF        C3XP3+2,W               ; 
+000304 5A??           00876     SUBWFB      C1XP1+2,F               ; 
+                      00877 
+000306 E2??           00878     BC          $ + .8                  ; 
+000308 68E8           00879     SETF        WREG                    ; For the edge case where we borrow on
+00030A 26??           00880     ADDWF       C1XP1+2,F               ; the high byte, add 255+1 (256) to it.
+00030C 2A??           00881     INCF        C1XP1+2,F               ;(There could only have been 1 carry bit)
+                      00882 ;
+                      00883 ; Round by adding 0.5 (128) to the mid byte. Low byte is so insignificant
+                      00884 ; that we don't need to bother rounding through it; just save the cycles.
+                      00885 ;
+00030E 0E80           00886     MOVLW   .128                ; 
+000310 26??           00887     ADDWF   C1XP1+1,F           ; If there is a carry here, then the fraction 
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE 18
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+000312 B0D8           00888     BTFSC   STATUS,C            ; (C1xP1-mid) is higher than half, or 0.5
+000314 28??           00889     INCF    C1XP1+2,W           ; So the whole part (C1xP1-High) rounds up 1.
+                      00890 ;
+                      00891 ; Output byte to the buffer.
+                      00892 ;
+000316 50??           00893     MOVF    C1XP1+2,W   ; Dropping the lowest two bytes is
+                      00894                                 ; an effective divide by 2^16
+                      00895 
+                      00896 ; WREG now contains answer
+                      00897 
+000318 D???           00898     BRA     WRITE_BUFFER        ; Start it up again.
+                      00899 ;;}
+                      00900 ;_______________________________________________________________________________
+                      00901 
+                      00902 ;--------------------------------------;
+                      00903 ; Get coefficients (8 Byte table read) ;
+                      00904 ;_______________________________________________________________________________
+                      00905 ;;{
+00031A                00906 GET_COEF  
+00031A 66??           00907     TSTFSZ      _COEF_POINT
+00031C D???           00908     BRA         $ + .8
+                      00909 
+00031E 0E08           00910     MOVLW       .8              ; Manually increment pointer to coefficient
+000320 26??           00911     ADDWF       _COEF_POINT,F   ; data (in multiples of 8 (2-byte x 4-byte))
+                      00912 
+000322 0CFF           00913     RETLW       FAILURE         ; First set is constant answer, so just return
+                      00914 
+000324 C??? FFF6      00915     MOVFF   _COEF_POINT, TBLPTRL
+000328 6AF8           00916     CLRF    TBLPTRU             ; 
+00032A 0E08           00917     MOVLW     0X08              ; Load TBLPTR with the base address
+00032C 6EF7           00918     MOVWF   TBLPTRH             ; 
+                      00919 
+00032E 0009           00920     TBLRD*+                     ; read into TABLAT and increment
+000330 50F5           00921     MOVF    TABLAT, W           ; get data
+000332 6E??           00922     MOVWF     C0+0
+000334 0009           00923     TBLRD*+                     ; read into TABLAT and increment
+000336 50F5           00924     MOVF    TABLAT, W           ; get data
+000338 6E??           00925     MOVWF     C0+1
+00033A 0009           00926     TBLRD*+                     ; read into TABLAT and increment
+00033C 50F5           00927     MOVF    TABLAT, W           ; get data
+00033E 6E??           00928     MOVWF     C1+0
+000340 0009           00929     TBLRD*+                     ; read into TABLAT and increment
+000342 50F5           00930     MOVF    TABLAT, W           ; get data
+000344 6E??           00931     MOVWF         C1+1
+000346 0009           00932     TBLRD*+                     ; read into TABLAT and increment
+000348 50F5           00933     MOVF    TABLAT, W           ; get data
+00034A 6E??           00934     MOVWF     C2+0
+00034C 0009           00935     TBLRD*+                     ; read into TABLAT and increment
+00034E 50F5           00936     MOVF    TABLAT, W           ; get data
+000350 6E??           00937     MOVWF     C2+1
+000352 0009           00938     TBLRD*+                     ; read into TABLAT and increment
+000354 50F5           00939     MOVF    TABLAT, W           ; get data
+000356 6E??           00940     MOVWF     C3+0
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE 19
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+000358 0009           00941     TBLRD*+                     ; read into TABLAT and increment
+00035A 50F5           00942     MOVF    TABLAT, W           ; get data
+00035C 6E??           00943     MOVWF         C3+1
+                      00944 
+00035E CFF6 F???      00945     MOVFF   TBLPTRL, _COEF_POINT ; This automatically makes the pointer right
+                      00946 
+000362 0E80           00947     MOVLW       0X80                    ; 
+000364 6000           00948     CPFSLT      _COEF_POINT,W   ; If we're past the end of the table,
+000366 6A??           00949     CLRF        _COEF_POINT             ; need to go back to the start (0x00)
+                      00950 
+000368 0C01           00951     RETLW       SUCCESS
+                      00952 ;;}
+                      00953 ;_______________________________________________________________________________
+                      00954 
+                      00955 ;-------------------;
+                      00956 ; Write ring buffer ;
+                      00957 ;_______________________________________________________________________________
+                      00958 ;;{
+                      00959 ; *TODOs* 
+                      00960 ; (1) consolidate this all into one sub that will work for any ring buffer.
+                      00961 ; (2) Use the FLAGS reg to signal to the system the state of a buffer.
+                      00962 
+00036A                00963 WRITE_RING_BUFFER
+00036A 6E??           00964     MOVWF       _CHAR
+                      00965 
+00036C 0E10           00966     MOVLW       .16
+00036E 60??           00967     CPFSLT      _COUNT
+000370 D???           00968     BRA         CANT_WRITE
+000372 6AEA           00969     CLRF        FSR0H
+000374 C??? FFEE      00970     MOVFF       _CHAR, POSTINC0
+000378 2A??           00971     INCF        _COUNT
+00037A 0E10           00972     MOVLW       .16
+00037C 5CE9           00973     SUBWF       FSR0L,W
+00037E 64??           00974     CPFSGT      _RINGBUFF_P
+000380 6EE9           00975     MOVWF       FSR0L
+                      00976 
+000382 0C01           00977     RETLW       SUCCESS
+000384                00978 CANT_WRITE                                                      
+000384 0CFF           00979     RETLW       FAILURE
+                      00980 ;-------------------------------------------------------------------------------
+000386                00981 WRITE_PWM_BUFFER
+000386 6E??           00982     MOVWF       _CHAR
+                      00983 
+000388 0E18           00984     MOVLW       .24
+00038A 60??           00985     CPFSLT      _COUNT
+00038C D???           00986     BRA         CANT_WRITE_PWM
+00038E 6AEA           00987     CLRF        FSR0H
+000390 C??? FFEE      00988     MOVFF       _CHAR, POSTINC0
+000394 2A??           00989     INCF        _COUNT
+000396 0E18           00990     MOVLW       .24
+000398 5CE9           00991     SUBWF       FSR0L,W
+00039A 64??           00992     CPFSGT      _RINGBUFF_P
+00039C 6EE9           00993     MOVWF       FSR0L
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE 20
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00994 
+00039E 0C01           00995     RETLW       SUCCESS
+0003A0                00996 CANT_WRITE_PWM                                                  
+0003A0 0CFF           00997     RETLW       FAILURE
+                      00998 ;;}
+                      00999 ;_______________________________________________________________________________
+                      01000 
+                      01001 ;------------------;
+                      01002 ; Read ring buffer ;
+                      01003 ;_______________________________________________________________________________
+                      01004 ;;{
+0003A2                01005 READ_BUFFER_PWM
+0003A2 50??           01006     MOVF        PWM_COUNT,W             ; 
+0003A4 E1??           01007     BNZ         $ + .4                  ;  if (count > max)
+0003A6 D???           01008     BRA         READ_PWM_ERROR          ; {
+0003A8 6AEA           01009     CLRF        FSR0H                   ; 
+0003AA C??? FFE9      01010     MOVFF       PWM_OUT_POINT, FSR0L    ; FSR = output_pointer;
+0003AE CFEF F???      01011     MOVFF       INDF0, _CHAR            ; character = *FSR;
+0003B2 2A??           01012     INCF        PWM_OUT_POINT           ; output_pointer++;
+0003B4 06??           01013     DECF        PWM_COUNT               ; count--;
+0003B6 0E??           01014     MOVLW       PWM_RINGBUFF+.23        ; 
+0003B8 64??           01015     CPFSGT      PWM_OUT_POINT           ; if (output_pointer > end_of_buffer)
+0003BA D???           01016     BRA         FINISH_READ_PWM         ;   {
+0003BC 0E??           01017     MOVLW       PWM_RINGBUFF            ;   output_pointer = start_of_buffer;
+0003BE 6E??           01018     MOVWF       PWM_OUT_POINT           ;   }
+0003C0                01019 FINISH_READ_PWM                         ; }
+0003C0 50??           01020     MOVF        _CHAR, W
+0003C2 0012           01021     RETURN
+0003C4                01022 READ_PWM_ERROR
+0003C4 0CFF           01023     RETLW FAILURE               ; *TODO* Should do something else here
+                      01024 ;-------------------------------------------------------------------------------
+0003C6                01025 READ_BUFFER_R
+0003C6 50??           01026     MOVF        R_COUNT,W               ; 
+0003C8 E1??           01027     BNZ         $ + .4                  ;  if (count > max)
+0003CA D???           01028     BRA         READ_R_ERROR            ; {
+0003CC 6AEA           01029     CLRF        FSR0H                   ; 
+0003CE C??? FFE9      01030     MOVFF       R_OUT_POINT, FSR0L      ; FSR = output_pointer;
+0003D2 CFEF F???      01031     MOVFF       INDF0, _CHAR            ; character = *FSR;
+0003D6 2A??           01032     INCF        R_OUT_POINT             ; output_pointer++;
+0003D8 06??           01033     DECF        R_COUNT                 ; count--;
+0003DA 0E??           01034     MOVLW       R_RINGBUFF+.15          ; 
+0003DC 64??           01035     CPFSGT      R_OUT_POINT             ; if (output_pointer > end_of_buffer)
+0003DE D???           01036     BRA         FINISH_READ_R           ;   {
+0003E0 0E??           01037     MOVLW       R_RINGBUFF              ;   output_pointer = start_of_buffer;
+0003E2 6E??           01038     MOVWF       R_OUT_POINT             ;   }
+0003E4                01039 FINISH_READ_R                           ; }
+0003E4 50??           01040     MOVF        _CHAR, W
+0003E6 0012           01041     RETURN
+0003E8                01042 READ_R_ERROR
+0003E8 0CFF           01043     RETLW FAILURE               ; *TODO* Should do something else here
+                      01044 ;-------------------------------------------------------------------------------
+0003EA                01045 READ_BUFFER_G
+0003EA 50??           01046     MOVF        G_COUNT,W               ; 
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE 21
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0003EC E1??           01047     BNZ         $ + .4                  ;  if (count > max)
+0003EE D???           01048     BRA         READ_G_ERROR            ; {
+0003F0 6AEA           01049     CLRF        FSR0H                   ; 
+0003F2 C??? FFE9      01050     MOVFF       G_OUT_POINT, FSR0L      ; FSR = output_pointer;
+0003F6 CFEF F???      01051     MOVFF       INDF0, _CHAR            ; character = *FSR;
+0003FA 2A??           01052     INCF        G_OUT_POINT             ; output_pointer++;
+0003FC 06??           01053     DECF        G_COUNT                 ; count--;
+0003FE 0E??           01054     MOVLW       G_RINGBUFF+.15          ; 
+000400 64??           01055     CPFSGT      G_OUT_POINT             ; if (output_pointer > end_of_buffer)
+000402 D???           01056     BRA         FINISH_READ_G           ;   {
+000404 0E??           01057     MOVLW       G_RINGBUFF              ;   output_pointer = start_of_buffer;
+000406 6E??           01058     MOVWF       G_OUT_POINT             ;   }
+000408                01059 FINISH_READ_G                           ; }
+000408 50??           01060     MOVF        _CHAR, W
+00040A 0012           01061     RETURN
+00040C                01062 READ_G_ERROR
+00040C 0CFF           01063     RETLW FAILURE               ; *TODO* Should do something else here
+                      01064 ;-------------------------------------------------------------------------------
+00040E                01065 READ_BUFFER_B
+00040E 50??           01066     MOVF        B_COUNT,W               ; 
+000410 E1??           01067     BNZ         $ + .4                  ;  if (count > max)
+000412 D???           01068     BRA         READ_B_ERROR            ; {
+000414 6AEA           01069     CLRF        FSR0H                   ; 
+000416 C??? FFE9      01070     MOVFF       B_OUT_POINT, FSR0L      ; FSR = output_pointer;
+00041A CFEF F???      01071     MOVFF       INDF0, _CHAR            ; character = *FSR;
+00041E 2A??           01072     INCF        B_OUT_POINT             ; output_pointer++;
+000420 06??           01073     DECF        B_COUNT                 ; count--;
+000422 0E??           01074     MOVLW       B_RINGBUFF+.15          ; 
+000424 64??           01075     CPFSGT      B_OUT_POINT             ; if (output_pointer > end_of_buffer)
+000426 D???           01076     BRA         FINISH_READ_B           ;   {
+000428 0E??           01077     MOVLW       B_RINGBUFF              ;   output_pointer = start_of_buffer;
+00042A 6E??           01078     MOVWF       B_OUT_POINT             ;   }
+00042C                01079 FINISH_READ_B                           ; }
+00042C 50??           01080     MOVF        _CHAR, W
+00042E 0012           01081     RETURN
+000430                01082 READ_B_ERROR
+000430 0CFF           01083     RETLW FAILURE               ; *TODO* Should do something else here
+                      01084 ;;}
+                      01085 ;_______________________________________________________________________________
+                      01086 
+                      01087 ;----------------------;
+                      01088 ; Read from the EEPROM ;
+                      01089 ;_______________________________________________________________________________
+                      01090 ;;{
+                      01091 ; This subroutine reads a segment of data from the EEPROM to RAM. 
+                      01092 ;
+                      01093 ; The parameters are.
+                      01094 ;
+                      01095 ; EE_ADDRESS = The 8-bit address of EEPROM to read.
+                      01096 ; EE_LENGTH  = The length of data to be read.
+                      01097 ; <RAM TARGET> WREG = The address in ram to move the string too.
+                      01098 ;
+                      01099 ; It's called as follows.
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE 22
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      01100 ;-------------------------------------
+                      01101 ; MOVLW <EE address you want to read>
+                      01102 ; MOVWF EE_ADDRESS
+                      01103 ;
+                      01104 ; MOVLW <length of string, in Hex>
+                      01105 ; MOVWF EE_LENGTH
+                      01106 ;
+                      01107 ; MOVLW <name of a variable, or buffer address>
+                      01108 ;
+                      01109 ; CALL EE_READ
+                      01110 ;-------------------------------------
+                      01111 ; You of course must have the two variables declared in your main ASM file
+                      01112 ;_______________________________________________________________________________                        
+                                                            
+000432                01113 EE_READ
+000432 6EE9           01114     MOVWF       FSR0L               ; Load the indirect address pointer with the
+000434 6AEA           01115     CLRF        FSR0H               ; address of the first byte of our RAM buffer
+                      01116 
+000436 9EA6           01117     BCF         EECON1, EEPGD       ; Target is EEPROM, not program memory
+000438 9CA6           01118     BCF         EECON1, CFGS        ; Target is NOT Configuration memory
+                      01119 ;BRA $ - .14 destination                
+00043A 50??           01120     MOVF        EE_ADDRESS, W       ; Load the EEPROM engine with 
+00043C 6EA9           01121     MOVWF       EEADR               ; the address for our EE data
+                      01122 
+00043E 80A6           01123     BSF         EECON1, RD          ; Begin the EEPROM read operation
+                      01124 
+000440 CFA8 FFEE      01125     MOVFF       EEDATA, POSTINC0    ; Move EE data to RAM via pointer. pointer++
+                      01126 
+000444 2A??           01127     INCF        EE_ADDRESS          ; Increase the EE address by one.
+000446 2E??           01128     DECFSZ      EE_LENGTH, F        ; Decrement the counter.
+000448 D???           01129     BRA         $ - .14             ; If not overflow, loop again.
+00044A 0012           01130     RETURN
+                      01131 ;;}
+                      01132 ;_______________________________________________________________________________
+                      01133 
+                      01134 ;-------------------------------;
+                      01135 ; psudo-random number generator ;
+                      01136 ;_______________________________________________________________________________
+                      01137 ;;{
+00044C                01138 GEN_RANDOM
+00044C D???           01139     RCALL       _48BIT_LFSR
+00044E D???           01140     RCALL       _48BIT_LFSR
+000450 D???           01141     RCALL       _48BIT_LFSR
+000452 D???           01142     RCALL       _48BIT_LFSR
+000454 D???           01143     RCALL       _48BIT_LFSR
+000456 D???           01144     RCALL       _48BIT_LFSR
+000458 D???           01145     RCALL       _48BIT_LFSR
+00045A D???           01146     RCALL       _48BIT_LFSR     
+                      01147 
+00045C 0E10           01148     MOVLW       .16                     ;
+00045E 64??           01149     CPFSGT      RAND                    ;
+000460 6E??           01150     MOVWF       RAND                    ; Keep random number in a +16-
+000462 0EEF           01151     MOVLW       .255-.16                ; range to prevent overshoot
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE 23
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+000464 60??           01152     CPFSLT      RAND                    ;
+000466 6E??           01153     MOVWF       RAND                    ;
+000468 0012           01154     RETURN
+                      01155 ;;}
+                      01156 ;_______________________________________________________________________________
+                      01157 
+                      01158 ;-----------------------------------------;
+                      01159 ;  LFSR "Linear feedback shift register"  ;
+                      01160 ;_______________________________________________________________________________
+                      01161 ;;{
+                      01162 ; Note: An even number of bytes is the most memory efficient length for an LFSR.  
+                      01163 ; However, as a general rule even length LFSRs take more operations to implement 
+                      01164 ; maximal period, so are slower to execute. The best compromise for this is an 
+                      01165 ; even number of bytes -1 bit (though -3 bits is also good). This general rule 
+                      01166 ; does not apply to 1 or 2 byte LFSRs, which are special cases. The larger the 
+                      01167 ; LFSR the less important this detail becomes as the shifts will dominate the 
+                      01168 ; time taken.
+                      01169 ;_______________________________________________________________________________
+00046A                01170 _48BIT_LFSR
+00046A 90D8           01171     BCF         STATUS, C       ; Clear unknown bit out of carry
+                      01172 
+00046C 32??           01173     RRCF        LFSR_01, F      ;
+00046E 32??           01174     RRCF        LFSR_02, F      ;
+000470 32??           01175     RRCF        LFSR_03, F      ; Rotate (shift) registers through the carry.
+000472 32??           01176     RRCF        LFSR_04, F      ;
+000474 32??           01177     RRCF        LFSR_05, F      ;
+000476 32??           01178     RRCF        RAND, F         ;
+                      01179 
+000478 E3??           01180     BNC         $ +     .10     ; Test the output bit. (lsb)
+                      01181                                 ; If it is 0, do nothing and just move on.
+                      01182                                 ; If it is 1, then we XOR in our bit mask.
+                      01183 
+00047A 0E89           01184     MOVLW       B'10001001' ; Bits 48, 44, 41
+00047C 1A??           01185     XORWF       LFSR_01, F      ; 
+00047E 0E40           01186     MOVLW       B'01000000'     ; Bits 39
+000480 1A??           01187     XORWF       LFSR_02, F      ; 
+000482 0012           01188     RETURN
+                      01189 ;;}
+                      01190 ;_______________________________________________________________________________
+                      01191 
+                      01192 ;------------------------;
+                      01193 ;  LUT (Look Up Tables)  ;
+                      01194 ;_______________________________________________________________________________
+                      01195 ;;{
+                      01196 ; 4x4 cubic Hermite spline coefficients (bugged)
+                      01197 ;                       *TODO* First one was bugged.
+                      01198 ; 16x4 .(2^16) cubic Hermite spline coefficients
+000484                01199 _16X4_TABLE             
+                      01200     ORG 0X0800
+000800 0000 0000 0000 01201     DATA        .0,     .0,     .0,     .0
+       0000 
+000808 0708 FD98 09E8 01202     DATA        .1800,  .64920, .2536,  .120
+       0078 
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE 24
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+000810 0C40 F6C0 1740 01203     DATA        .3136,  .63168, .5952,  .448
+       01C0 
+000818 0FD8 EC08 2778 01204     DATA        .4056,  .60424, .10104, .936
+       03A8 
+000820 1200 DE00 3A00 01205     DATA        .4608,  .56832, .14848, .1536
+       0600 
+000828 12E8 CD38 4E48 01206     DATA        .4840,  .52536, .20040, .2200
+       0898 
+000830 12C0 BA40 63C0 01207     DATA        .4800,  .47680, .25536, .2880
+       0B40 
+000838 11B8 A5A8 79D8 01208     DATA        .4536,  .42408, .31192, .3528
+       0DC8 
+000840 1000 9000 9000 01209     DATA        .4096,  .36864, .36864, .4096
+       1000 
+000848 0DC8 79D8 A5A8 01210     DATA        .3528,  .31192, .42408, .4536
+       11B8 
+000850 0B40 63C0 BA40 01211     DATA        .2880,  .25536, .47680, .4800
+       12C0 
+000858 0898 4E48 CD38 01212     DATA        .2200,  .20040, .52536, .4840
+       12E8 
+000860 0600 3A00 DE00 01213     DATA        .1536,  .14848, .56832, .4608
+       1200 
+000868 03A8 2778 EC08 01214     DATA        .936,   .10104, .60424, .4056
+       0FD8 
+000870 01C0 1740 F6C0 01215     DATA        .448,   .5952,  .63168, .3136
+       0C40 
+000878 0078 09E8 FD98 01216     DATA        .0120,  .2536,  .64920, .1800
+       0708 
+                      01217 ; 8x4 .(2^16) cubic Hermite spline coefficients
+000880                01218 _8X4_16BIT_TABLE
+                      01219                                 ;ORG 0x0800
+000880 0000 0000 0000 01220     DATA        .0,     .0,     .0,     .0
+       0000 
+000888 0C40 F6C0 1740 01221     DATA        .3136,  .63168, .5952,  .448
+       01C0 
+000890 1200 DE00 3A00 01222     DATA        .4608,  .56832, .14848, .1536
+       0600 
+000898 12C0 BA40 63C0 01223     DATA        .4800,  .47680, .25536, .2880
+       0B40 
+0008A0 1000 9000 9000 01224     DATA        .4096,  .36864, .36864, .4096
+       1000 
+0008A8 0B40 63C0 BA40 01225     DATA        .2880,  .25536, .47680, .4800
+       12C0 
+0008B0 0600 3A00 DE00 01226     DATA        .1536,  .14848, .56832, .4608
+       1200 
+0008B8 01C0 1740 F6C0 01227     DATA        .448,   .5952,  .63168, .3136
+       0C40 
+                      01228 ; 8x4 .(2^8) cubic Hermite spline coefficients (Rounded)
+0008C0                01229 _8X4_8BIT_TABLE
+                      01230                                 ;ORG 0x0800
+0008C0 0000 0000      01231     DB          .0,     .0,     .0,     .0
+0008C4 F70C 0217      01232     DB          .12,    .247,   .23,    .2
+0008C8 DE12 063A      01233     DB          .18,    .222,   .58,    .6
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE 25
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0008CC BA13 0B64      01234     DB          .19,    .186,   .100,   .11
+0008D0 9010 1090      01235     DB          .16,    .144,   .144,   .16
+0008D4 640B 13BA      01236     DB          .11,    .100,   .186,   .19
+0008D8 3A06 12DE      01237     DB          .6,     .58,    .222,   .18
+0008DC 1702 0CF7      01238     DB          .2,     .23,    .247,   .12
+0008E0                01239 _TABLE_END              ;ORG 0x0800
+                      01240 ;;}
+                      01241 ;_______________________________________________________________________________
+                      01242 
+                      01243     END
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE 26
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+A                                 00000000
+ABDEN                             00000000
+ABDOVF                            00000007
+ACCESS                            00000000
+ACKDT                             00000005
+ACKEN                             00000004
+ACKSTAT                           00000006
+ACQT0                             00000003
+ACQT1                             00000004
+ACQT2                             00000005
+ACTVIE                            00000002
+ACTVIF                            00000002
+ADCON0                            00000FC2
+ADCON1                            00000FC1
+ADCON2                            00000FC0
+ADCS0                             00000000
+ADCS1                             00000001
+ADCS2                             00000002
+ADDEN                             00000003
+ADDR0                             00000000
+ADDR1                             00000001
+ADDR2                             00000002
+ADDR3                             00000003
+ADDR4                             00000004
+ADDR5                             00000005
+ADDR6                             00000006
+ADEN                              00000003
+ADFM                              00000007
+ADIE                              00000006
+ADIF                              00000006
+ADIP                              00000006
+ADON                              00000000
+ADRES                             00000FC3
+ADRESH                            00000FC4
+ADRESL                            00000FC3
+AN10                              00000004
+AN11                              00000005
+AN3                               00000004
+AN4                               00000000
+AN5                               00000001
+AN6                               00000002
+AN7                               00000003
+AN8                               00000006
+AN9                               00000007
+ANS10                             00000002
+ANS11                             00000003
+ANS3                              00000003
+ANS4                              00000004
+ANS5                              00000005
+ANS6                              00000006
+ANS7                              00000007
+ANS8                              00000000
+ANS9                              00000001
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE 27
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+ANSEL                             00000F7E
+ANSELH                            00000F7F
+B1_TIME                           00000006
+B2_TIME                           00000009
+B3_TIME                           0000000C
+B4_TIME                           0000000F
+BANKED                            00000001
+BAUDCON                           00000FB8
+BAUDCTL                           00000FB8
+BBS                               FLAGS,4
+BCLIE                             00000003
+BCLIF                             00000003
+BCLIP                             00000003
+BF                                00000000
+BOR                               00000000
+BRG16                             00000003
+BRGH                              00000002
+BSR                               00000FE0
+BSR_TEMP                          00000002
+BTOEE                             00000004
+BTOEF                             00000004
+BTSEE                             00000007
+BTSEF                             00000007
+B_1                               PWM_PINS+0,2
+B_2                               PWM_PINS+1,6
+B_3                               PWM_PINS+1,7
+B_4                               PWM_PINS+0,3
+B_COEF_POINT                      00000087
+B_COUNT                           00000088
+B_IN_POINT                        00000089
+B_OUT_POINT                       0000008A
+B_P0                              0000003B
+B_P1                              0000003C
+B_P2                              0000003D
+B_P3                              0000003E
+B_RINGBUFF                        0000008B
+C                                 00000000
+C0                                00000027
+C0XP0                             0000001B
+C1                                00000029
+C12IN1M                           00000001
+C12IN2M                           00000002
+C12IN3M                           00000003
+C12INP                            00000000
+C12OUT                            00000004
+C1CH0                             00000000
+C1CH1                             00000001
+C1HYS                             00000003
+C1IE                              00000006
+C1IF                              00000006
+C1IP                              00000006
+C1OE                              00000005
+C1ON                              00000007
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE 28
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+C1OUT                             00000006
+C1POL                             00000004
+C1R                               00000002
+C1RSEL                            00000005
+C1SP                              00000003
+C1SYNC                            00000001
+C1XP1                             0000001E
+C2                                0000002B
+C2CH0                             00000000
+C2CH1                             00000001
+C2HYS                             00000002
+C2IE                              00000005
+C2IF                              00000005
+C2IP                              00000005
+C2OE                              00000005
+C2ON                              00000007
+C2OUT                             00000006
+C2POL                             00000004
+C2R                               00000002
+C2RSEL                            00000004
+C2SP                              00000003
+C2SYNC                            00000000
+C2XP2                             00000021
+C3                                0000002D
+C3XP3                             00000024
+CANT_WRITE                        00000384
+CANT_WRITE_PWM                    000003A0
+CCP1                              00000005
+CCP1CON                           00000FBD
+CCP1IE                            00000002
+CCP1IF                            00000002
+CCP1IP                            00000002
+CCP1M0                            00000000
+CCP1M1                            00000001
+CCP1M2                            00000002
+CCP1M3                            00000003
+CCPR1                             00000FBE
+CCPR1H                            00000FBF
+CCPR1L                            00000FBE
+CFGS                              00000006
+CHS0                              00000002
+CHS1                              00000003
+CHS2                              00000004
+CHS3                              00000005
+CK                                00000007
+CKE                               00000006
+CKP                               00000004
+CKTXP                             00000004
+CLKIN                             00000005
+CLKOUT                            00000004
+CM1CON0                           00000F6D
+CM2CON0                           00000F6B
+CM2CON1                           00000F6C
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE 29
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+CRC16EE                           00000002
+CRC16EF                           00000002
+CRC5EE                            00000001
+CRC5EF                            00000001
+CREN                              00000004
+CSRC                              00000007
+CUBIC_HERMITE                     00000250
+CVREF                             00000002
+D                                 00000005
+D1EN                              00000007
+D1LPS                             00000006
+D1NSS                             00000000
+D1PSS0                            00000002
+D1PSS1                            00000003
+DAC1OE                            00000005
+DAC1R0                            00000000
+DAC1R1                            00000001
+DAC1R2                            00000002
+DAC1R3                            00000003
+DAC1R4                            00000004
+DATAEE                            00F00000
+DC                                00000001
+DC1B0                             00000004
+DC1B1                             00000005
+DDRA                              TRISA
+DDRB                              TRISB
+DDRC                              TRISC
+DDRD                              TRISD
+DDRE                              TRISE
+DFN8EE                            00000003
+DFN8EF                            00000003
+DIR                               00000002
+DONE                              00000001
+DTRXP                             00000005
+DUMMY_TIME                        00000010
+D_A                               00000005
+D_NOT_A                           00000005
+ECCP1AS                           00000FB6
+ECCPAS0                           00000004
+ECCPAS1                           00000005
+ECCPAS2                           00000006
+ECCPASE                           00000007
+EEADR                             00000FA9
+EEADR0                            00000000
+EEADR1                            00000001
+EEADR2                            00000002
+EEADR3                            00000003
+EEADR4                            00000004
+EEADR5                            00000005
+EEADR6                            00000006
+EEADR7                            00000007
+EECON1                            00000FA6
+EECON2                            00000FA7
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE 30
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+EEDATA                            00000FA8
+EEIE                              00000004
+EEIF                              00000004
+EEIP                              00000004
+EEPGD                             00000007
+EERDWT                            FLAGS,1
+EE_ADDRESS                        00000019
+EE_LENGTH                         0000001A
+EE_READ                           00000432
+ENDP0                             00000003
+ENDP1                             00000004
+ENDP2                             00000005
+ENDP3                             00000006
+END_INT                           0000003A
+EPCONDIS                          00000003
+EPHSHK                            00000004
+EPINEN                            00000001
+EPOUTEN                           00000002
+EPSTALL                           00000000
+FAILURE                           -1
+FALSE                             -1
+FAST                              00000001
+FERR                              00000002
+FILL_BUFFER                       0000023E
+FINISH_READ_B                     0000042C
+FINISH_READ_G                     00000408
+FINISH_READ_PWM                   000003C0
+FINISH_READ_R                     000003E4
+FLAGS                             00000003
+FREE                              00000004
+FRM0                              00000000
+FRM1                              00000001
+FRM10                             00000002
+FRM2                              00000002
+FRM3                              00000003
+FRM4                              00000004
+FRM5                              00000005
+FRM6                              00000006
+FRM7                              00000007
+FRM8                              00000000
+FRM9                              00000001
+FSEN                              00000002
+FSR0                              00000000
+FSR0H                             00000FEA
+FSR0L                             00000FE9
+FSR1                              00000001
+FSR1H                             00000FE2
+FSR1L                             00000FE1
+FSR2                              00000002
+FSR2H                             00000FDA
+FSR2L                             00000FD9
+FVR1EN                            00000007
+FVR1S0                            00000004
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE 31
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+FVR1S1                            00000005
+FVR1ST                            00000006
+G1_TIME                           00000005
+G2_TIME                           00000008
+G3_TIME                           0000000B
+G4_TIME                           0000000E
+GBS                               FLAGS,3
+GCEN                              00000007
+GEN_LOOP                          00000242
+GEN_RANDOM                        0000044C
+GET_COEF                          0000031A
+GIE                               00000007
+GIEH                              00000007
+GIEL                              00000006
+GIE_GIEH                          00000007
+GO                                00000001
+GO_DONE                           00000001
+GO_NOT_DONE                       00000001
+G_1                               PWM_PINS+0,1
+G_2                               PWM_PINS+1,5
+G_3                               PWM_PINS+0,7
+G_4                               PWM_PINS+0,4
+G_COEF_POINT                      00000073
+G_COUNT                           00000074
+G_IN_POINT                        00000075
+G_OUT_POINT                       00000076
+G_P0                              00000037
+G_P1                              00000038
+G_P2                              00000039
+G_P3                              0000003A
+G_RINGBUFF                        00000077
+HFIOFL                            00000001
+IDLEIE                            00000004
+IDLEIF                            00000004
+IDLEN                             00000007
+INDF0                             00000FEF
+INDF1                             00000FE7
+INDF2                             00000FDF
+INT0                              00000000
+INT0E                             00000004
+INT0F                             00000001
+INT0IE                            00000004
+INT0IF                            00000001
+INT1                              00000001
+INT1E                             00000003
+INT1F                             00000000
+INT1IE                            00000003
+INT1IF                            00000000
+INT1IP                            00000006
+INT1P                             00000006
+INT2                              00000002
+INT2E                             00000004
+INT2F                             00000001
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE 32
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+INT2IE                            00000004
+INT2IF                            00000001
+INT2IP                            00000007
+INT2P                             00000007
+INTCON                            00000FF2
+INTCON2                           00000FF1
+INTCON3                           00000FF0
+INTEDG0                           00000006
+INTEDG1                           00000005
+INTEDG2                           00000004
+INTSRC                            00000007
+IOCA                              00000F79
+IOCA0                             00000000
+IOCA1                             00000001
+IOCA3                             00000003
+IOCA4                             00000004
+IOCA5                             00000005
+IOCB                              00000F7A
+IOCB4                             00000004
+IOCB5                             00000005
+IOCB6                             00000006
+IOCB7                             00000007
+IOFS                              00000002
+IPEN                              00000007
+IPR1                              00000F9F
+IPR2                              00000FA2
+IRCF0                             00000004
+IRCF1                             00000005
+IRCF2                             00000006
+ISRH                              00000008
+ISRL                              00000018
+ITTERATE                          00000272
+LATA                              00000F89
+LATA4                             00000004
+LATA5                             00000005
+LATB                              00000F8A
+LATB4                             00000004
+LATB5                             00000005
+LATB6                             00000006
+LATB7                             00000007
+LATC                              00000F8B
+LATC0                             00000000
+LATC1                             00000001
+LATC2                             00000002
+LATC3                             00000003
+LATC4                             00000004
+LATC5                             00000005
+LATC6                             00000006
+LATC7                             00000007
+LFIOFS                            00000000
+LFSR_01                           00000013
+LFSR_02                           00000014
+LFSR_03                           00000015
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE 33
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+LFSR_04                           00000016
+LFSR_05                           00000017
+LOW_ISR                           0000001C
+MAIN                              0000009E
+MC1OUT                            00000007
+MC2OUT                            00000006
+MSK0                              00000000
+MSK1                              00000001
+MSK2                              00000002
+MSK3                              00000003
+MSK4                              00000004
+MSK5                              00000005
+MSK6                              00000006
+MSK7                              00000007
+N                                 00000004
+NO                                0
+NOT_A                             00000005
+NOT_ADDRESS                       00000005
+NOT_BOR                           00000000
+NOT_DONE                          00000001
+NOT_PD                            00000002
+NOT_POR                           00000001
+NOT_RABPU                         00000007
+NOT_RI                            00000004
+NOT_SS                            00000006
+NOT_T1SYNC                        00000002
+NOT_T3SYNC                        00000002
+NOT_TO                            00000003
+NOT_W                             00000002
+NOT_WRITE                         00000002
+NVCFG0                            00000000
+NVCFG1                            00000001
+OERR                              00000001
+OSC1                              00000005
+OSC2                              00000004
+OSCCON                            00000FD3
+OSCCON2                           00000FD2
+OSCFIE                            00000007
+OSCFIF                            00000007
+OSCFIP                            00000007
+OSCTUNE                           00000F9B
+OSTS                              00000003
+OV                                00000003
+P                                 00000004
+P0                                0000002F
+P1                                00000030
+P1A                               00000005
+P1B                               00000004
+P1C                               00000003
+P1D                               00000002
+P1M0                              00000006
+P1M1                              00000007
+P2                                00000031
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE 34
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+P3                                00000032
+PC                                00000FF9
+PCL                               00000FF9
+PCLATH                            00000FFA
+PCLATU                            00000FFB
+PD                                00000002
+PDC0                              00000000
+PDC1                              00000001
+PDC2                              00000002
+PDC3                              00000003
+PDC4                              00000004
+PDC5                              00000005
+PDC6                              00000006
+PEIE                              00000006
+PEIE_GIEL                         00000006
+PEN                               00000002
+PGM                               00000003
+PIDEE                             00000000
+PIDEF                             00000000
+PIE1                              00000F9D
+PIE2                              00000FA0
+PIR1                              00000F9E
+PIR2                              00000FA1
+PKTDIS                            00000004
+PLUSW0                            00000FEB
+PLUSW1                            00000FE3
+PLUSW2                            00000FDB
+POR                               00000001
+PORTA                             00000F80
+PORTB                             00000F81
+PORTC                             00000F82
+POSTDEC0                          00000FED
+POSTDEC1                          00000FE5
+POSTDEC2                          00000FDD
+POSTINC0                          00000FEE
+POSTINC1                          00000FE6
+POSTINC2                          00000FDE
+PPB0                              00000000
+PPB1                              00000001
+PPBI                              00000001
+PPBRST                            00000006
+PR2                               00000FCB
+PREINC0                           00000FEC
+PREINC1                           00000FE4
+PREINC2                           00000FDC
+PRI_SD                            00000002
+PROD                              00000FF3
+PRODH                             00000FF4
+PRODL                             00000FF3
+PRSEN                             00000007
+PSA                               00000003
+PSSAC0                            00000002
+PSSAC1                            00000003
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE 35
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+PSSBD0                            00000000
+PSSBD1                            00000001
+PSTRCON                           00000FB9
+PVCFG0                            00000002
+PVCFG1                            00000003
+PWM1CON                           00000FB7
+PWM_COUNT                         00000044
+PWM_IN_POINT                      00000045
+PWM_OUT_POINT                     00000046
+PWM_PINS                          00000011
+PWM_RINGBUFF                      00000047
+PWM_RLD                           FLAGS,0
+R                                 00000002
+R1_TIME                           00000004
+R2_TIME                           00000007
+R3_TIME                           0000000A
+R4_TIME                           0000000D
+RA0                               00000000
+RA1                               00000001
+RA3                               00000003
+RA4                               00000004
+RA5                               00000005
+RABIE                             00000003
+RABIF                             00000000
+RABIP                             00000000
+RABPU                             00000007
+RAND                              00000018
+RB4                               00000004
+RB5                               00000005
+RB6                               00000006
+RB7                               00000007
+RBS                               FLAGS,2
+RC0                               00000000
+RC1                               00000001
+RC2                               00000002
+RC3                               00000003
+RC4                               00000004
+RC5                               00000005
+RC6                               00000006
+RC7                               00000007
+RCEN                              00000003
+RCIDL                             00000006
+RCIE                              00000005
+RCIF                              00000005
+RCIP                              00000005
+RCON                              00000FD0
+RCREG                             00000FAE
+RCSTA                             00000FAB
+RD                                00000000
+RD16                              00000007
+READ_BUFFER_B                     0000040E
+READ_BUFFER_G                     000003EA
+READ_BUFFER_PWM                   000003A2
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE 36
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+READ_BUFFER_R                     000003C6
+READ_B_ERROR                      00000430
+READ_G_ERROR                      0000040C
+READ_PWM_ERROR                    000003C4
+READ_R_ERROR                      000003E8
+REFCON0                           00000FBA
+REFCON1                           00000FBB
+REFCON2                           00000FBC
+RESUME                            00000002
+RES_VECT                          00000000
+RI                                00000004
+RSEN                              00000001
+RX                                00000005
+RX9                               00000006
+RX9D                              00000000
+R_1                               PWM_PINS+0,0
+R_2                               PWM_PINS+1,4
+R_3                               PWM_PINS+0,6
+R_4                               PWM_PINS+0,5
+R_COEF_POINT                      0000005F
+R_COUNT                           00000060
+R_IN_POINT                        00000061
+R_NOT_W                           00000002
+R_OUT_POINT                       00000062
+R_P0                              00000033
+R_P1                              00000034
+R_P2                              00000035
+R_P3                              00000036
+R_RINGBUFF                        00000063
+R_W                               00000002
+S                                 00000003
+SBOREN                            00000006
+SCK                               00000006
+SCKP                              00000004
+SCL                               00000006
+SCS0                              00000000
+SCS1                              00000001
+SDA                               00000004
+SDI                               00000004
+SDO                               00000007
+SE0                               00000005
+SEN                               00000000
+SENDB                             00000003
+SLRA                              00000000
+SLRB                              00000001
+SLRC                              00000002
+SLRCON                            00000F76
+SMP                               00000007
+SOFIE                             00000006
+SOFIF                             00000006
+SP0                               00000000
+SP1                               00000001
+SP2                               00000002
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE 37
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+SP3                               00000003
+SP4                               00000004
+SPBRG                             00000FAF
+SPBRGH                            00000FB0
+SPEN                              00000007
+SPLLEN                            00000006
+SRCLK0                            00000004
+SRCLK1                            00000005
+SRCLK2                            00000006
+SRCON0                            00000F68
+SRCON1                            00000F69
+SREN                              00000005
+SRLEN                             00000007
+SRNQEN                            00000002
+SRPR                              00000000
+SRPS                              00000001
+SRQ                               00000004
+SRQEN                             00000003
+SRRC1E                            00000000
+SRRC2E                            00000001
+SRRCKE                            00000002
+SRRPE                             00000003
+SRSC1E                            00000004
+SRSC2E                            00000005
+SRSCKE                            00000006
+SRSPE                             00000007
+SS                                00000006
+SSPADD                            00000FC8
+SSPBUF                            00000FC9
+SSPCON1                           00000FC6
+SSPCON2                           00000FC5
+SSPEN                             00000005
+SSPIE                             00000003
+SSPIF                             00000003
+SSPIP                             00000003
+SSPM0                             00000000
+SSPM1                             00000001
+SSPM2                             00000002
+SSPM3                             00000003
+SSPMSK                            00000F6F
+SSPOV                             00000006
+SSPSTAT                           00000FC7
+STALLIE                           00000005
+STALLIF                           00000005
+START                             00000046
+STATUS                            00000FD8
+STATUS_TEMP                       00000001
+STKFUL                            00000007
+STKOVF                            00000007
+STKPTR                            00000FFC
+STKUNF                            00000006
+STRA                              00000000
+STRB                              00000001
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE 38
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+STRC                              00000002
+STRD                              00000003
+STRSYNC                           00000004
+SUCCESS                           1
+SUSPND                            00000001
+SWDTE                             00000000
+SWDTEN                            00000000
+SYNC                              00000004
+T08BIT                            00000006
+T0CKI                             00000005
+T0CON                             00000FD5
+T0CS                              00000005
+T0IE                              00000005
+T0IF                              00000002
+T0PS0                             00000000
+T0PS1                             00000001
+T0PS2                             00000002
+T0SE                              00000004
+T13CKI                            00000006
+T1CKPS0                           00000004
+T1CKPS1                           00000005
+T1CON                             00000FCD
+T1OSCEN                           00000003
+T1OSCI                            00000006
+T1OSCO                            00000007
+T1RUN                             00000006
+T1SYNC                            00000002
+T2CKPS0                           00000000
+T2CKPS1                           00000001
+T2CON                             00000FCA
+T2OUTPS0                          00000003
+T2OUTPS1                          00000004
+T2OUTPS2                          00000005
+T2OUTPS3                          00000006
+T3CCP1                            00000003
+T3CKPS0                           00000004
+T3CKPS1                           00000005
+T3CON                             00000FB1
+T3SYNC                            00000002
+TABLAT                            00000FF5
+TBLPTR                            00000FF6
+TBLPTRH                           00000FF7
+TBLPTRL                           00000FF6
+TBLPTRU                           00000FF8
+TIME_DOWN                         000001B0
+TIME_UP                           00000228
+TMR0                              00000FD6
+TMR0H                             00000FD7
+TMR0IE                            00000005
+TMR0IF                            00000002
+TMR0IP                            00000002
+TMR0L                             00000FD6
+TMR0ON                            00000007
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE 39
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+TMR1                              00000FCE
+TMR1CS                            00000001
+TMR1H                             00000FCF
+TMR1IE                            00000000
+TMR1IF                            00000000
+TMR1IP                            00000000
+TMR1L                             00000FCE
+TMR1ON                            00000000
+TMR2                              00000FCC
+TMR2IE                            00000001
+TMR2IF                            00000001
+TMR2IP                            00000001
+TMR2ON                            00000002
+TMR3                              00000FB2
+TMR3CS                            00000001
+TMR3H                             00000FB3
+TMR3IE                            00000001
+TMR3IF                            00000001
+TMR3IP                            00000001
+TMR3L                             00000FB2
+TMR3ON                            00000000
+TO                                00000003
+TOS                               00000FFD
+TOSH                              00000FFE
+TOSL                              00000FFD
+TOSU                              00000FFF
+TRISA                             00000F92
+TRISA4                            00000004
+TRISA5                            00000005
+TRISB                             00000F93
+TRISB4                            00000004
+TRISB5                            00000005
+TRISB6                            00000006
+TRISB7                            00000007
+TRISC                             00000F94
+TRISC0                            00000000
+TRISC1                            00000001
+TRISC2                            00000002
+TRISC3                            00000003
+TRISC4                            00000004
+TRISC5                            00000005
+TRISC6                            00000006
+TRISC7                            00000007
+TRMT                              00000001
+TRNIE                             00000003
+TRNIF                             00000003
+TRUE                              1
+TUN0                              00000000
+TUN1                              00000001
+TUN2                              00000002
+TUN3                              00000003
+TUN4                              00000004
+TUN5                              00000005
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE 40
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+TX                                00000007
+TX9                               00000006
+TX9D                              00000000
+TXEN                              00000005
+TXIE                              00000004
+TXIF                              00000004
+TXIP                              00000004
+TXREG                             00000FAD
+TXSTA                             00000FAC
+UA                                00000001
+UADDR                             00000F5C
+UCFG                              00000F61
+UCON                              00000F64
+UEIE                              00000F5B
+UEIR                              00000F5F
+UEP0                              00000F53
+UEP1                              00000F54
+UEP2                              00000F55
+UEP3                              00000F56
+UEP4                              00000F57
+UEP5                              00000F58
+UEP6                              00000F59
+UEP7                              00000F5A
+UERRIE                            00000001
+UERRIF                            00000001
+UFRMH                             00000F5E
+UFRML                             00000F5D
+UIE                               00000F60
+UIR                               00000F62
+UPUEN                             00000004
+URSTIE                            00000000
+URSTIF                            00000000
+USBEN                             00000003
+USBIE                             00000002
+USBIF                             00000002
+USBIP                             00000002
+USTAT                             00000F63
+UTEYE                             00000007
+VREFCON0                          00000FBA
+VREFCON1                          00000FBB
+VREFCON2                          00000FBC
+VREFM                             00000001
+VREFP                             00000000
+W                                 00000000
+WCOL                              00000007
+WDTCON                            00000FD1
+WPUA                              00000F77
+WPUA3                             00000003
+WPUA4                             00000004
+WPUA5                             00000005
+WPUB                              00000F78
+WPUB4                             00000004
+WPUB5                             00000005
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE 41
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+WPUB6                             00000006
+WPUB7                             00000007
+WR                                00000001
+WREG                              00000FE8
+WREN                              00000002
+WRERR                             00000003
+WRITE_BUFFER                      0000026A
+WRITE_PWM_BUFFER                  00000386
+WRITE_RING_BUFFER                 0000036A
+WUE                               00000001
+W_TEMP                            00000000
+YES                               1
+Z                                 00000002
+_.org_3_004E                      0000004E
+_.org_3_0052                      00000052
+_.org_3_0058                      00000058
+_.org_3_0288                      00000288
+_.org_3_02A2                      000002A2
+_.org_3_02BC                      000002BC
+_.org_3_02D6                      000002D6
+_.org_3_02F2                      000002F2
+_.org_3_0306                      00000306
+_.org_3_031C                      0000031C
+_.org_3_03A4                      000003A4
+_.org_3_03C8                      000003C8
+_.org_3_03EC                      000003EC
+_.org_3_0410                      00000410
+_.org_3_0448                      00000448
+_.org_3_0478                      00000478
+_16X4_TABLE                       00000484
+_48BIT_LFSR                       0000046A
+_8X4_16BIT_TABLE                  00000880
+_8X4_8BIT_TABLE                   000008C0
+_BBSIZ_OFF_4L                     000000F7
+_BBSIZ_ON_4L                      000000FF
+_BOREN_NOSLP_2L                   000000FD
+_BOREN_OFF_2L                     000000F9
+_BOREN_ON_2L                      000000FB
+_BOREN_SBORDIS_2L                 000000FF
+_BORV_19_2L                       000000FF
+_BORV_22_2L                       000000F7
+_BORV_27_2L                       000000EF
+_BORV_30_2L                       000000E7
+_CHAR                             0000003F
+_COEF_POINT                       00000040
+_CONFIG1H                         00300001
+_CONFIG1L                         00300000
+_CONFIG2H                         00300003
+_CONFIG2L                         00300002
+_CONFIG3H                         00300005
+_CONFIG4L                         00300006
+_CONFIG5H                         00300009
+_CONFIG5L                         00300008
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE 42
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+_CONFIG6H                         0030000B
+_CONFIG6L                         0030000A
+_CONFIG7H                         0030000D
+_CONFIG7L                         0030000C
+_COUNT                            00000041
+_CP0_OFF_5L                       000000FF
+_CP0_ON_5L                        000000FE
+_CP1_OFF_5L                       000000FF
+_CP1_ON_5L                        000000FD
+_CPB_OFF_5H                       000000FF
+_CPB_ON_5H                        000000BF
+_CPD_OFF_5H                       000000FF
+_CPD_ON_5H                        0000007F
+_CPUDIV_CLKDIV2_1L                000000EF
+_CPUDIV_CLKDIV3_1L                000000F7
+_CPUDIV_CLKDIV4_1L                000000FF
+_CPUDIV_NOCLKDIV_1L               000000E7
+_DEBUG_OFF_4L                     000000FF
+_DEBUG_ON_4L                      0000007F
+_DEVID1                           003FFFFE
+_DEVID2                           003FFFFF
+_EBTR0_OFF_7L                     000000FF
+_EBTR0_ON_7L                      000000FE
+_EBTR1_OFF_7L                     000000FF
+_EBTR1_ON_7L                      000000FD
+_EBTRB_OFF_7H                     000000FF
+_EBTRB_ON_7H                      000000BF
+_FCMEN_OFF_1H                     000000BF
+_FCMEN_ON_1H                      000000FF
+_FILL_B                           00000126
+_FILL_G                           000000E2
+_FILL_PWM                         0000018E
+_FOSC_ECCLKOUTH_1H                000000F4
+_FOSC_ECCLKOUTL_1H                000000FC
+_FOSC_ECCLKOUTM_1H                000000FA
+_FOSC_ECH_1H                      000000F5
+_FOSC_ECL_1H                      000000FD
+_FOSC_ECM_1H                      000000FB
+_FOSC_ERCCLKOUT_1H                000000F3
+_FOSC_ERC_1H                      000000F7
+_FOSC_HS_1H                       000000F2
+_FOSC_IRCCLKOUT_1H                000000F9
+_FOSC_IRC_1H                      000000F8
+_FOSC_LP_1H                       000000F0
+_FOSC_XT_1H                       000000F1
+_HFOFST_OFF_3H                    000000F7
+_HFOFST_ON_3H                     000000FF
+_IDLOC0                           00200000
+_IDLOC1                           00200001
+_IDLOC2                           00200002
+_IDLOC3                           00200003
+_IDLOC4                           00200004
+_IDLOC5                           00200005
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE 43
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+_IDLOC6                           00200006
+_IDLOC7                           00200007
+_IESO_OFF_1H                      0000007F
+_IESO_ON_1H                       000000FF
+_LOAD_TIMERS                      0000016A
+_LVP_OFF_4L                       000000FB
+_LVP_ON_4L                        000000FF
+_MCLRE_OFF_3H                     0000007F
+_MCLRE_ON_3H                      000000FF
+_OUT_POINT                        00000042
+_PCLKEN_OFF_1H                    000000DF
+_PCLKEN_ON_1H                     000000FF
+_PLLEN_OFF_1H                     000000EF
+_PLLEN_ON_1H                      000000FF
+_PWRTEN_OFF_2L                    000000FF
+_PWRTEN_ON_2L                     000000FE
+_RINGBUFF_P                       00000043
+_STVREN_OFF_4L                    000000FE
+_STVREN_ON_4L                     000000FF
+_TABLE_END                        000008E0
+_USBDIV_OFF_1L                    000000DF
+_USBDIV_ON_1L                     000000FF
+_WDTEN_OFF_2H                     000000FE
+_WDTEN_ON_2H                      000000FF
+_WDTPS_1024_2H                    000000F5
+_WDTPS_128_2H                     000000EF
+_WDTPS_16384_2H                   000000FD
+_WDTPS_16_2H                      000000E9
+_WDTPS_1_2H                       000000E1
+_WDTPS_2048_2H                    000000F7
+_WDTPS_256_2H                     000000F1
+_WDTPS_2_2H                       000000E3
+_WDTPS_32768_2H                   000000FF
+_WDTPS_32_2H                      000000EB
+_WDTPS_4096_2H                    000000F9
+_WDTPS_4_2H                       000000E5
+_WDTPS_512_2H                     000000F3
+_WDTPS_64_2H                      000000ED
+_WDTPS_8192_2H                    000000FB
+_WDTPS_8_2H                       000000E7
+_WRT0_OFF_6L                      000000FF
+_WRT0_ON_6L                       000000FE
+_WRT1_OFF_6L                      000000FF
+_WRT1_ON_6L                       000000FD
+_WRTB_OFF_6H                      000000FF
+_WRTB_ON_6H                       000000BF
+_WRTC_OFF_6H                      000000FF
+_WRTC_ON_6H                       000000DF
+_WRTD_OFF_6H                      000000FF
+_WRTD_ON_6H                       0000007F
+_XINST_OFF_4L                     000000BF
+_XINST_ON_4L                      000000FF
+__18F13K50                        00000001
+MPASM 5.71                      18F13K50.ASM   1-5-2017  13:18:28         PAGE 44
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+__DEBUG                           
+__MPLAB_DEBUGGER_SIMULATOR        1
+
+Errors   :     0
+Warnings :     0 reported,    75 suppressed
+Messages :     0 reported,     0 suppressed
+
+
