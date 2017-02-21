@@ -118,13 +118,13 @@
 	 CONFIG WDTEN 	= OFF		; Watch dog timer DISABLED
 	 CONFIG WDTPS 	= 1			; WDT post scaler, 1:1 (don't matter)
 	 CONFIG MCLRE 	= OFF		; Master clear/reset is internal. RA3 is GPIO
-	 CONFIG HFOFST 	= OFF		; System is held in reset untill clock is stable
+	 CONFIG HFOFST 	= OFF		; System is held in reset until clock is stable
      CONFIG STVREN 	= OFF		; Hardware stack over/under flow disabled
 	 CONFIG LVP 	= OFF		; Low voltage programming is OFF
 	 CONFIG BBSIZ 	= OFF		; Boot block size is 512 words. (don't matter)
 	 CONFIG XINST 	= OFF		; Extended C language instruction set is OFF
 
-	 CONFIG DEBUG   = OFF		; Internal debugging hardware dissabled.
+	 CONFIG DEBUG   = OFF		; Internal debugging hardware disabled.
 
 	 CONFIG CP0 	= OFF		;
      CONFIG CP1 	= OFF		;
@@ -150,7 +150,7 @@
   CONFIG  FCMEN = ON            ; Fail-Safe Clock Monitor Enable bit (Fail-Safe Clock Monitor enabled)
 
 ; CONFIG2L
-  CONFIG  MCLRE = INTMCLR       ; Master Clear Enable bit (If LVP = 0, MCLR pin function is port defined function; If LVP =1, RE3 pin fuction is MCLR)
+  CONFIG  MCLRE = INTMCLR       ; Master Clear Enable bit (If LVP = 0, MCLR pin function is port defined function; If LVP =1, RE3 pin function is MCLR)
   CONFIG  PWRTE = OFF           ; Power-up Timer Enable bit (Power up timer disabled)
   CONFIG  LPBOREN = OFF         ; Low-power BOR enable bit (ULPBOR disabled)
   CONFIG  BOREN = SBORDIS       ; Brown-out Reset Enable bits (Brown-out Reset enabled , SBOREN bit is ignored)
@@ -339,14 +339,14 @@ DATAEE		ORG	0x310000
 #ENDIF
 
 	; Place seed for RNG in EEPROM
-    DE    	"ÀÏ£©Ÿ⁄"  ; 6 bytes
+    DE    	"√ã√¨¬£¬©√ô√ö"  ; 6 bytes
 
 ; List of other seeds you could choose from. (generated with KeePass 2.34)
 ;
-; "∏J/™‡r" ";˚3Œ˙5" "ÀÏ£©Ÿ⁄" "Fgı·2®" "§¢¡o#s" "/8Í.F<" "œ„Ò{rÆ",
-; "E˙˝∞%?" "&ÕFUÿe" "¡®~∑¨°" "¯]q<ın" "…AD¡q‡" "M√⁄2⁄P" "y$‘/wu",
-; "eΩﬂ∞~„" "Qoıo:}" ">∫ŒÛ¨$" "TÙ¶MJ–" "~V-˛&Œ" "≤~V‘%" "2™¸CÚ[",
-; "‘ß4∆x¶" ")–B»˛˙" "÷ ˝~•!" "ƒÀD·À˛" "ÿ_ﬁD,˜" "Ô®XKj" "Îv+.Æ.",
+; "¬∏J/¬™√†r" ";√ª3√é√∫5" "√ã√¨¬£¬©√ô√ö" "Fg√µ√°2¬®" "¬§¬¢√Åo#s" "/8√™.F<" "√è√£√±{r¬Æ",
+; "E√∫√Ω¬∞%?" "&√çFU√òe" "√Å¬®~¬∑¬¨¬°" "√∏]q<√µn" "√âAD√Åq√†" "M√É√ö2√öP" "y$√î/wu",
+; "e¬Ω√ü¬∞~√£" "Qo√µo:}" ">¬∫√é√≥¬¨$" "T√¥¬¶MJ√ê" "~V-√æ&√é" "¬≤~V√î%√∞" "2¬™√ºC√≤[",
+; "√î¬ß4√Üx¬¶" ")√êB√à√æ√∫" "√ñ √Ω~¬•!" "√Ñ√ãD√°√ã√æ" "√ò_√ûD,√∑" "√Ø¬®√∞XKj" "√´v+.¬Æ.",
 ;;}
 ;_______________________________________________________________________________
 
@@ -386,7 +386,7 @@ LOW_ISR
     MOVFF   BSR, BSR_TEMP       ; save bankselect register
 
     BTFSS	INTCON,TMR0IF		; Test to see if Timer0 is what caused
-    BRA		END_INT				; this interupt. If so handle it.
+    BRA		END_INT				; this interrupt. If so handle it.
 
 ;-------------------------------------------------------------------------------
 ; Timer0 interrupt service
@@ -409,7 +409,7 @@ LOW_ISR
     CLRF	TMR0L		; <--- This is the exact point Timer0 gets updated
 ;-------------------------------------------------------------------------------
 
-    BCF		INTCON, TMR0IF		; Reset Timer0 interupt flag
+    BCF		INTCON, TMR0IF		; Reset Timer0 interrupt flag
 
 END_INT    ; Context Saving for Low ISR
     MOVFF   BSR_TEMP, BSR       ; restore bankselect register
@@ -441,19 +441,19 @@ START
 	;__________________________________________________________
 	
 	; Initialize Ring buffers _________________________________
-    MOVLW	R_RINGBUFF	 ; Initilize the ring buffer
+    MOVLW	R_RINGBUFF	 ; Initialize the ring buffer
     MOVWF	R_IN_POINT	 ; to known good state.
     MOVWF	R_OUT_POINT	 ; (sort of... it still could have data)
 
-    MOVLW	G_RINGBUFF	 ; Initilize the ring buffer
+    MOVLW	G_RINGBUFF	 ; Initialize the ring buffer
     MOVWF	G_IN_POINT	 ; to known good state.
     MOVWF	G_OUT_POINT	 ; (sort of... it still could have data)
 
-    MOVLW	B_RINGBUFF	 ; Initilize the ring buffer
+    MOVLW	B_RINGBUFF	 ; Initialize the ring buffer
     MOVWF	B_IN_POINT	 ; to known good state.
     MOVWF	B_OUT_POINT	 ; (sort of... it still could have data) 
 
-    MOVLW	PWM_RINGBUFF ; Initilize the ring buffer
+    MOVLW	PWM_RINGBUFF ; Initialize the ring buffer
     MOVWF	PWM_IN_POINT ; to known good state.
     MOVWF	PWM_OUT_POINT; (sort of... it still could have data)
 	;__________________________________________________________
@@ -481,7 +481,7 @@ START
 	CLRF 	TMR0L
     CLRF	TMR0H
 
-; *TODO* Prescaler is a convient way to control rate of change for colors.
+; *TODO* Prescaler is a convenient way to control rate of change for colors.
     MOVLW	b'10001000'
 ;			  ||||||||__					
 ;			  |||||||___\ __ T0PS0:2		Prescaler.
@@ -497,9 +497,9 @@ START
 ;			  |_____________ TMR0ON  		1 = ON, 0 = OFF
     MOVWF	T0CON
 
-    BSF		INTCON, PEIE   ; Enable peripheral interupt
+    BSF		INTCON, PEIE   ; Enable peripheral interrupt
 
-    BSF		INTCON, TMR0IE ; Enable Timer0 interupt
+    BSF		INTCON, TMR0IE ; Enable Timer0 interrupt
 
     BCF		ADCON0, ADON   ; Turn off the ADC when not in use.
 
@@ -513,7 +513,7 @@ START
     MOVLW	b'00001111'	   ; Make most the significant
     ANDWF	TRISB		   ; nyble of PORTB outputs.
 
-    BSF		INTCON, GIE	   ; Enable global interupts last
+    BSF		INTCON, GIE	   ; Enable global interrupts last
 #ENDIF
 	
 #IFDEF __18F27K40
@@ -526,7 +526,7 @@ START
 ;			  ||||||____ > __ Prescaler Rate Select bit
 ;			  |||||_____/
 ;			  ||||
-;			  ||||___________ TMR0 Input Asynchronization Enable bit
+;			  ||||___________ TMR0 Input Asynchronous Enable bit
 ;			  |||
 ;			  |||__________ 
 ;			  ||___________\_ Timer0 Clock Source Select bits
@@ -548,9 +548,9 @@ START
 ;			  |______________ TMR0 Enable bit
 	MOVWF	T0CON0
 	
-	BSF		INTCON, PEIE	; Enable peripheral interupt
+	BSF		INTCON, PEIE	; Enable peripheral interrupt
 
-    BSF		INTCON, TMR0IE	; Enable Timer0 interupt
+    BSF		INTCON, TMR0IE	; Enable Timer0 interrupt
 
     BCF		ADCON0, ADON	; Turn off the ADC when not in use.
 	
@@ -570,7 +570,7 @@ START
 	ANDWF	TRISA			; 
 
 	CLRF	WPUC			;
-	CLRF	WPUB			; Dissable weak pullups
+	CLRF	WPUB			; Disable weak pullups
 	CLRF	WPUA			;
 	
 	CLRF	SLRCONC			;
@@ -585,7 +585,7 @@ START
 	;CLRF	INLVLB			; Input buffer threshold (doesn't matter for outputs)
 	;CLRF	INLVLA			;
 	
-	BSF		INTCON, GIE		; Enable global interupts last
+	BSF		INTCON, GIE		; Enable global interrupts last
 #ENDIF
 	
 	
@@ -689,7 +689,7 @@ _Fill_B
 
 _LOAD_TIMERS
 ; Once we have interpolated on our randomly generated points, we finally have 
-; some timeing data to load. This simple routing fills the delays with that data
+; some timing data to load. This simple routing fills the delays with that data
 ; This area is where you would modify the loop to get different effects.
     BTFSS	PWM_RLD
     BRA		_FILL_PWM
@@ -788,7 +788,7 @@ TIME_DOWN
 ; This next part is kinda trick actually.
 ;
 ; When a delay overflows, it's associated pin needs a state change. The naive
-; aproach would be to simply test for zero, then set/clear a bit. That takes
+; approach would be to simply test for zero, then set/clear a bit. That takes
 ; 3 instructions per bit. We can do better though ;) The subtract instruction 
 ; has a TRUE/FALSE result, the carry bit, which we CAN just shift into some
 ; other buffer. After shifting every bit, we end up with a mask that can simply
@@ -911,16 +911,16 @@ GEN_LOOP
 ; 	(1): (C1*P1 + C2*P2)-(C0*P0 + C3*P3)
 ; 	(2): (((C1*P1 + C2*P2)- C0*P0) - C3*P3)
 ; 
-; The addition rutine has a single bit overflow, using it twice would compound 
+; The addition routine has a single bit overflow, using it twice would compound 
 ; the issue. The subtraction can handle it by assuming a borrow was an addition 
-; overflow. So the number 2 case is the prefered way to do this.
+; overflow. So the number 2 case is the preferred way to do this.
 ;_______________________________________________________________________________
 
 Cubic_Hermite
-    RCALL	GET_COEF		; Load the coefficents for our fractional step
+    RCALL	GET_COEF		; Load the coefficients for our fractional step
 
     INCFSZ	WREG			; Sub returns FAILURE status when the
-    BRA		ITTERATE		; fraction is 0, meaning output = P1
+    BRA		ITERATE		; fraction is 0, meaning output = P1
 
 ; Cycle points
 ;-------------------------------------------------------------------------------
@@ -952,7 +952,7 @@ WRITE_BUFFER
 ;	Output: 24 bit unsigned fixed point product in CnxPn+0, CnxPn+1, CnxPn+2
 ;-------------------------------------------------------------------------------
 
-ITTERATE
+ITERATE
 ; C1*P1
     MOVF	P0, W
     MULWF	C0+1
