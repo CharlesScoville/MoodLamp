@@ -1,0 +1,1 @@
+FINDSTR "reg1 reg2" trace.txt > sort.txt
