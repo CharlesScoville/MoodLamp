@@ -1,12 +1,12 @@
 ;******************************************************************************;
-;																			   ;
-;    Filename:         18F13K50.asm											   ;
-;    Date:             Sunday, April 29, 2012                                  ;
-;    File Version:     v 1.0                                                   ;
-;    Author:           Charles Scoville. AKA: Oblivion                         ;
-;    Company:          Meh...                                                  ;
-;	 Font:			   Any monospaced font								 	   ;
-;	 Purpose:		   Mood lamp using tri-color LEDs. A LFSR based RNG is used.
+;									       ;
+;    Filename:        18F13K50.asm					       ;
+;    Date:            December 2016                                  	       ;
+;    File Version:    v 1.0                                                    ;
+;    Author:          Charles Scoville. AKA: Oblivion                          ;
+;    Company:         Meh...                                                   ;
+;    Font:	      Any monospaced font			               ;
+;    Purpose:	      Mood lamp using tri-color LEDs. A LFSR based RNG is used.;
 ;                                                                              ;
 ; Notes:
 ; For a 120Hz refresh rate the period is ~8.33ms.
