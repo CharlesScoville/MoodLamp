@@ -29,15 +29,15 @@
 ;                             |           |
 ;     VPP (MCLR internal)    [| 4       17|]    Vusb 3.3v reg (bypass with cap)
 ;                             |           |
-; 		       RC5 as R_4    [| 5       16|]    RC0 as R_1
+;              RC5 as R_4    [| 5       16|]    RC0 as R_1
 ;                             |           |
-; 			   RC4 as G_4    [| 6       15|]    RC1 as G_1
+;              RC4 as G_4    [| 6       15|]    RC1 as G_1
 ;                             |           |
-; 			   RC3 as B_4    [| 7       14|]    RC2 as B_1
+;              RC3 as B_4    [| 7       14|]    RC2 as B_1
 ;                             |           |
-; 		 	   RC6 as R_3    [| 8       13|]    RB4 as R_2
+;              RC6 as R_3    [| 8       13|]    RB4 as R_2
 ;                             |           |
-; 			   RC7 as G_3    [| 9       12|]    RB5 as G_2
+;              RC7 as G_3    [| 9       12|]    RB5 as G_2
 ;                             |           |
 ;              RB7 as B_3    [|10       11|]    RB6 as B_2
 ;                             |___________|
@@ -66,13 +66,13 @@
 ; Definitions and Declarations
 ;_______________________________________________________________________________
 ;;{
-								 ; V PIN numbers V
-    #define	R_1		PWM_PINS+0,0 ; 16
-    #define	G_1		PWM_PINS+0,1 ; 15
-    #define	B_1		PWM_PINS+0,2 ; 14
+				; V PIN numbers V
+    #define	R_1	PWM_PINS+0,0 ; 16
+    #define	G_1	PWM_PINS+0,1 ; 15
+    #define	B_1	PWM_PINS+0,2 ; 14
 
-    #define	R_2		PWM_PINS+1,4 ; 13
-    #define	G_2		PWM_PINS+1,5 ; 12
+    #define	R_2	PWM_PINS+1,4 ; 13
+    #define	G_2	PWM_PINS+1,5 ; 12
     #define	B_2 	PWM_PINS+1,6 ; 11
 
     #define	R_3 	PWM_PINS+0,6 ; 8
@@ -116,7 +116,7 @@
 	 CONFIG BOREN 	= OFF		; Brown out reset DISABLED
      CONFIG BORV 	= 30		; 3.0v; Highest Brown out voltage possible
 	 CONFIG WDTEN 	= OFF		; Watch dog timer DISABLED
-	 CONFIG WDTPS 	= 1			; WDT post scaler, 1:1 (don't matter)
+	 CONFIG WDTPS 	= 1		; WDT post scaler, 1:1 (don't matter)
 	 CONFIG MCLRE 	= OFF		; Master clear/reset is internal. RA3 is GPIO
 	 CONFIG HFOFST 	= OFF		; System is held in reset until clock is stable
      CONFIG STVREN 	= OFF		; Hardware stack over/under flow disabled
