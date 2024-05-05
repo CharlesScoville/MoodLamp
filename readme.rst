@@ -6,6 +6,8 @@ This is my take on an RGB mood lamp.
 
 **WARNING!! As of -Q1 2017-, this is very much a “pre-alpha” or “WIP” (Work In Progress). This repository's contents should not be used as-is in any project for any reason at this time. In short, it's not close to done yet.**
 
+**WARNING 2.0 !! As of -Q2 2024-, this is very much abandon. Mostly, I've moved on from the PIC and Microchip parts in general. This repository's contents should still not be used as-is in any project for any reason at this time. In short, it will never be complete.**
+
 Synopsis
 ---------------------
 An RGB mood lamp creates soothing, beautiful soft light of endless colors. The light output gradually fades from one color to the next, creating a comfortable lighting experience. It achieves an endless range of colors and shades by using a semi opaque optical “diffuser” to mix varying amounts of RGB (Red, Green, and Blue) light together. Adding all this together gives rise to the name “RGB mood lamp.”
